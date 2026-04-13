@@ -1,0 +1,32 @@
+version: '3.9'
+
+services:
+  frontend:
+    build: ./client
+    ports:
+      - '3000:80'
+    depends_on:
+      - backend
+
+  backend:
+    build: ./server
+    ports:
+      - '5000:5000'
+    environment:
+      - PORT=5000
+      - MONGO_URI=${MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      - NODE_ENV=production
+    volumes:
+      - uploads_data:/app/uploads
+
+  mongo:
+    image: mongo:6
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  uploads_data:
+  mongo_data:
