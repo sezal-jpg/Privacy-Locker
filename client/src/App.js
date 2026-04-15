@@ -47,6 +47,17 @@ function App() {
     <li key={i}>
       {f}
       <br />
+
+      <a
+        href={process.env.REACT_APP_API_URL + "/view/" + f}
+        target="_blank"
+        rel="noreferrer"
+      >
+        View
+      </a>
+
+      <br />
+
       <a
         href={process.env.REACT_APP_API_URL + "/download/" + f}
         target="_blank"
@@ -54,7 +65,9 @@ function App() {
       >
         Download
       </a>
+
       <br />
+
       <button
         onClick={async () => {
           await fetch(
