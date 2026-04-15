@@ -78,6 +78,32 @@ function App() {
     getFiles();
   };
 
+  // 🔥 FIXED VIEW
+  const viewFile = async (f) => {
+    const res = await fetch(API + "/view/" + f, {
+      headers: { Authorization: token },
+    });
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    window.open(url);
+  };
+
+  // 🔥 FIXED DOWNLOAD
+  const downloadFile = async (f) => {
+    const res = await fetch(API + "/download/" + f, {
+      headers: { Authorization: token },
+    });
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = f;
+    a.click();
+  };
+
   // ================= UI =================
 
   if (!token) {
@@ -108,6 +134,15 @@ function App() {
     <div style={{ textAlign: "center", marginTop: "40px" }}>
       <h1>Privacy Locker</h1>
 
+      <button onClick={() => {
+        localStorage.removeItem("token");
+        setToken(null);
+      }}>
+        Logout
+      </button>
+
+      <br /><br />
+
       <input type="file" onChange={(e) => setFile(e.target.files[0])} />
       <br /><br />
       <button onClick={uploadFile}>Upload</button>
@@ -119,24 +154,10 @@ function App() {
             {f}
             <br />
 
-            <a
-              href={API + "/view/" + f}
-              target="_blank"
-              rel="noreferrer"
-            >
-              View
-            </a>
-
+            <button onClick={() => viewFile(f)}>View</button>
             <br />
 
-            <a
-              href={API + "/download/" + f}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Download
-            </a>
-
+            <button onClick={() => downloadFile(f)}>Download</button>
             <br />
 
             <button onClick={() => deleteFile(f)}>Delete</button>
