@@ -3,21 +3,22 @@ const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
 const fs = require("fs");
+const CryptoJS = require("crypto-js");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+const SECRET_KEY = "mysecretkey"; // you can change later
 
 app.use(cors());
 app.use(express.json());
 
 // ================== MULTER SETUP ==================
 
-// Create uploads folder if not exists
 if (!fs.existsSync("uploads")) {
   fs.mkdirSync("uploads");
 }
 
-// Storage config
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "uploads/");
@@ -46,25 +47,71 @@ app.get("/api", (req, res) => {
   });
 });
 
-// Upload file
+// ================== ENCRYPTED UPLOAD ==================
+
 app.post("/upload", upload.single("file"), (req, res) => {
+  const filePath = "uploads/" + req.file.filename;
+
+  const fileData = fs.readFileSync(filePath);
+
+  const encrypted = CryptoJS.AES.encrypt(
+    fileData.toString("base64"),
+    SECRET_KEY
+  ).toString();
+
+  fs.writeFileSync(filePath, encrypted);
+
   res.json({
-    message: "File uploaded successfully",
-    file: req.file,
+    message: "File uploaded and encrypted",
+    file: req.file.filename,
   });
 });
 
-// List files
+// ================== FILE LIST ==================
+
 app.get("/files", (req, res) => {
   const files = fs.readdirSync("uploads");
   res.json(files);
 });
 
-// ================== SERVER ==================
+// ================== DOWNLOAD (DECRYPT) ==================
+
 app.get("/download/:filename", (req, res) => {
   const filePath = "uploads/" + req.params.filename;
-  res.download(filePath);
+
+  const encryptedData = fs.readFileSync(filePath, "utf-8");
+
+  const bytes = CryptoJS.AES.decrypt(encryptedData, SECRET_KEY);
+  const decrypted = Buffer.from(
+    bytes.toString(CryptoJS.enc.Utf8),
+    "base64"
+  );
+
+  res.setHeader(
+    "Content-Disposition",
+    "attachment; filename=" + req.params.filename
+  );
+  res.send(decrypted);
 });
+
+// ================== VIEW (DECRYPT) ==================
+
+app.get("/view/:filename", (req, res) => {
+  const filePath = "uploads/" + req.params.filename;
+
+  const encryptedData = fs.readFileSync(filePath, "utf-8");
+
+  const bytes = CryptoJS.AES.decrypt(encryptedData, SECRET_KEY);
+  const decrypted = Buffer.from(
+    bytes.toString(CryptoJS.enc.Utf8),
+    "base64"
+  );
+
+  res.send(decrypted);
+});
+
+// ================== DELETE ==================
+
 app.delete("/delete/:filename", (req, res) => {
   const filePath = "uploads/" + req.params.filename;
 
@@ -75,10 +122,9 @@ app.delete("/delete/:filename", (req, res) => {
     res.status(404).json({ message: "File not found" });
   }
 });
-app.get("/view/:filename", (req, res) => {
-  const filePath = __dirname + "/uploads/" + req.params.filename;
-  res.sendFile(filePath);
-});
+
+// ================== SERVER ==================
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
