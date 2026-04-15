@@ -61,7 +61,10 @@ app.get("/files", (req, res) => {
 });
 
 // ================== SERVER ==================
-
+app.get("/download/:filename", (req, res) => {
+  const filePath = "uploads/" + req.params.filename;
+  res.download(filePath);
+});
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
