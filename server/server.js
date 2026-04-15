@@ -4,14 +4,20 @@ const cors = require("cors");
 const multer = require("multer");
 const fs = require("fs");
 const CryptoJS = require("crypto-js");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-const SECRET_KEY = "mysecretkey"; // you can change later
+const SECRET_KEY = "mysecretkey";
+const JWT_SECRET = "jwtsecret";
 
 app.use(cors());
 app.use(express.json());
+
+// ================== USER STORAGE ==================
+let users = [];
 
 // ================== MULTER SETUP ==================
 
@@ -29,6 +35,40 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage: storage });
+
+// ================== AUTH ROUTES ==================
+
+// Signup
+app.post("/signup", async (req, res) => {
+  const { username, password } = req.body;
+
+  const hashed = await bcrypt.hash(password, 10);
+
+  users.push({ username, password: hashed });
+
+  res.json({ message: "User registered successfully" });
+});
+
+// Login
+app.post("/login", async (req, res) => {
+  const { username, password } = req.body;
+
+  const user = users.find((u) => u.username === username);
+
+  if (!user) {
+    return res.status(400).json({ message: "User not found" });
+  }
+
+  const isMatch = await bcrypt.compare(password, user.password);
+
+  if (!isMatch) {
+    return res.status(400).json({ message: "Invalid password" });
+  }
+
+  const token = jwt.sign({ username }, JWT_SECRET);
+
+  res.json({ token });
+});
 
 // ================== ROUTES ==================
 
@@ -74,7 +114,7 @@ app.get("/files", (req, res) => {
   res.json(files);
 });
 
-// ================== DOWNLOAD (DECRYPT) ==================
+// ================== DOWNLOAD ==================
 
 app.get("/download/:filename", (req, res) => {
   const filePath = "uploads/" + req.params.filename;
@@ -94,7 +134,7 @@ app.get("/download/:filename", (req, res) => {
   res.send(decrypted);
 });
 
-// ================== VIEW (DECRYPT) ==================
+// ================== VIEW ==================
 
 app.get("/view/:filename", (req, res) => {
   const filePath = "uploads/" + req.params.filename;
@@ -107,7 +147,6 @@ app.get("/view/:filename", (req, res) => {
     "base64"
   );
 
-  // 👇 detect file type
   const ext = req.params.filename.split(".").pop();
 
   if (ext === "png" || ext === "jpg" || ext === "jpeg") {
@@ -120,6 +159,7 @@ app.get("/view/:filename", (req, res) => {
 
   res.send(decrypted);
 });
+
 // ================== DELETE ==================
 
 app.delete("/delete/:filename", (req, res) => {
