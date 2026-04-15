@@ -65,6 +65,16 @@ app.get("/download/:filename", (req, res) => {
   const filePath = "uploads/" + req.params.filename;
   res.download(filePath);
 });
+app.delete("/delete/:filename", (req, res) => {
+  const filePath = "uploads/" + req.params.filename;
+
+  if (fs.existsSync(filePath)) {
+    fs.unlinkSync(filePath);
+    res.json({ message: "File deleted successfully" });
+  } else {
+    res.status(404).json({ message: "File not found" });
+  }
+});
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
