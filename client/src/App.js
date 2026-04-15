@@ -54,6 +54,19 @@ function App() {
       >
         Download
       </a>
+      <br />
+      <button
+        onClick={async () => {
+          await fetch(
+            process.env.REACT_APP_API_URL + "/delete/" + f,
+            { method: "DELETE" }
+          );
+          alert("File deleted!");
+          window.location.reload();
+        }}
+      >
+        Delete
+      </button>
     </li>
   ))}
 </ul>
