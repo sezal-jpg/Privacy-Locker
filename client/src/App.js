@@ -43,10 +43,20 @@ function App() {
 
       <h2>Uploaded Files</h2>
       <ul>
-        {files.map((f, i) => (
-          <li key={i}>{f}</li>
-        ))}
-      </ul>
+  {files.map((f, i) => (
+    <li key={i}>
+      {f}
+      <br />
+      <a
+        href={API + "/download/" + f}
+        target="_blank"
+        rel="noreferrer"
+      >
+        Download
+      </a>
+    </li>
+  ))}
+</ul>
     </div>
   );
 }
