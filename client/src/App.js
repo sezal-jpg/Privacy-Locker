@@ -1,23 +1,58 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 
 function App() {
+  const API = process.env.REACT_APP_API_URL;
+
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [token, setToken] = useState(localStorage.getItem("token"));
+
   const [file, setFile] = useState(null);
   const [files, setFiles] = useState([]);
 
-  const API = process.env.REACT_APP_API_URL;
+  // ================= AUTH =================
 
-  // Fetch files
+  const signup = async () => {
+    await fetch(API + "/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    });
+    alert("Signup successful!");
+  };
+
+  const login = async () => {
+    const res = await fetch(API + "/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    });
+
+    const data = await res.json();
+
+    if (!data.token) {
+      alert("Login failed");
+      return;
+    }
+
+    localStorage.setItem("token", data.token);
+    setToken(data.token);
+  };
+
+  // ================= FILES =================
+
   const getFiles = async () => {
-    const res = await fetch(API + "/files");
+    const res = await fetch(API + "/files", {
+      headers: { Authorization: token },
+    });
     const data = await res.json();
     setFiles(data);
   };
 
   useEffect(() => {
-    getFiles();
-  }, []);
+    if (token) getFiles();
+  }, [token]);
 
-  // Upload file
   const uploadFile = async () => {
     if (!file) return alert("Select a file");
 
@@ -26,12 +61,48 @@ function App() {
 
     await fetch(API + "/upload", {
       method: "POST",
+      headers: { Authorization: token },
       body: formData,
     });
 
-    alert("File uploaded!");
+    alert("Uploaded!");
     getFiles();
   };
+
+  const deleteFile = async (f) => {
+    await fetch(API + "/delete/" + f, {
+      method: "DELETE",
+      headers: { Authorization: token },
+    });
+
+    getFiles();
+  };
+
+  // ================= UI =================
+
+  if (!token) {
+    return (
+      <div style={{ textAlign: "center", marginTop: "50px" }}>
+        <h1>Privacy Locker 🔐</h1>
+
+        <input
+          placeholder="Username"
+          onChange={(e) => setUsername(e.target.value)}
+        />
+        <br /><br />
+
+        <input
+          type="password"
+          placeholder="Password"
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <br /><br />
+
+        <button onClick={signup}>Signup</button>
+        <button onClick={login}>Login</button>
+      </div>
+    );
+  }
 
   return (
     <div style={{ textAlign: "center", marginTop: "40px" }}>
@@ -41,48 +112,37 @@ function App() {
       <br /><br />
       <button onClick={uploadFile}>Upload</button>
 
-      <h2>Uploaded Files</h2>
-<ul>
-  {files.map((f, i) => (
-    <li key={i}>
-      {f}
-      <br />
+      <h2>Your Files</h2>
+      <ul>
+        {files.map((f, i) => (
+          <li key={i}>
+            {f}
+            <br />
 
-      <a
-        href={process.env.REACT_APP_API_URL + "/view/" + f}
-        target="_blank"
-        rel="noreferrer"
-      >
-        View
-      </a>
+            <a
+              href={API + "/view/" + f}
+              target="_blank"
+              rel="noreferrer"
+            >
+              View
+            </a>
 
-      <br />
+            <br />
 
-      <a
-        href={process.env.REACT_APP_API_URL + "/download/" + f}
-        target="_blank"
-        rel="noreferrer"
-      >
-        Download
-      </a>
+            <a
+              href={API + "/download/" + f}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Download
+            </a>
 
-      <br />
+            <br />
 
-      <button
-        onClick={async () => {
-          await fetch(
-            process.env.REACT_APP_API_URL + "/delete/" + f,
-            { method: "DELETE" }
-          );
-          alert("File deleted!");
-          window.location.reload();
-        }}
-      >
-        Delete
-      </button>
-    </li>
-  ))}
-</ul>
+            <button onClick={() => deleteFile(f)}>Delete</button>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
