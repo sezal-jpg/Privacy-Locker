@@ -75,6 +75,10 @@ app.delete("/delete/:filename", (req, res) => {
     res.status(404).json({ message: "File not found" });
   }
 });
+app.get("/view/:filename", (req, res) => {
+  const filePath = __dirname + "/uploads/" + req.params.filename;
+  res.sendFile(filePath);
+});
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
