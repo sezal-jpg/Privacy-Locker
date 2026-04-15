@@ -107,9 +107,19 @@ app.get("/view/:filename", (req, res) => {
     "base64"
   );
 
+  // 👇 detect file type
+  const ext = req.params.filename.split(".").pop();
+
+  if (ext === "png" || ext === "jpg" || ext === "jpeg") {
+    res.setHeader("Content-Type", "image/" + ext);
+  } else if (ext === "pdf") {
+    res.setHeader("Content-Type", "application/pdf");
+  } else if (ext === "txt") {
+    res.setHeader("Content-Type", "text/plain");
+  }
+
   res.send(decrypted);
 });
-
 // ================== DELETE ==================
 
 app.delete("/delete/:filename", (req, res) => {
