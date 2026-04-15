@@ -42,13 +42,13 @@ function App() {
       <button onClick={uploadFile}>Upload</button>
 
       <h2>Uploaded Files</h2>
-      <ul>
+<ul>
   {files.map((f, i) => (
     <li key={i}>
       {f}
       <br />
       <a
-        href={API + "/download/" + f}
+        href={process.env.REACT_APP_API_URL + "/download/" + f}
         target="_blank"
         rel="noreferrer"
       >
