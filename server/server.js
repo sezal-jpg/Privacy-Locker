@@ -52,9 +52,29 @@ const upload = multer({ storage: storage });
 
 // ================== AUTH ROUTES ==================
 
-// Signup
+// ✅ Signup with validation
 app.post("/signup", async (req, res) => {
   const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({
+      message: "Username and password are required",
+    });
+  }
+
+  if (password.length < 6) {
+    return res.status(400).json({
+      message: "Password must be at least 6 characters",
+    });
+  }
+
+  const existingUser = users.find((u) => u.username === username);
+
+  if (existingUser) {
+    return res.status(400).json({
+      message: "User already exists with this username",
+    });
+  }
 
   const hashed = await bcrypt.hash(password, 10);
   users.push({ username, password: hashed });
@@ -62,18 +82,27 @@ app.post("/signup", async (req, res) => {
   res.json({ message: "User registered successfully" });
 });
 
-// Login
+// ✅ Login with validation
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
+  if (!username || !password) {
+    return res.status(400).json({
+      message: "Username and password are required",
+    });
+  }
+
   const user = users.find((u) => u.username === username);
 
-  if (!user) return res.status(400).json({ message: "User not found" });
+  if (!user) {
+    return res.status(400).json({ message: "User not found" });
+  }
 
   const isMatch = await bcrypt.compare(password, user.password);
 
-  if (!isMatch)
+  if (!isMatch) {
     return res.status(400).json({ message: "Invalid password" });
+  }
 
   const token = jwt.sign({ username }, JWT_SECRET);
 
@@ -101,7 +130,7 @@ app.post("/upload", authMiddleware, upload.single("file"), (req, res) => {
 
   const encrypted = CryptoJS.AES.encrypt(
     fileData.toString("base64"),
-    user.password // 🔥 user-based encryption
+    user.password
   ).toString();
 
   fs.writeFileSync(filePath, encrypted);
