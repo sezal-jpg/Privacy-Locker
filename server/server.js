@@ -184,18 +184,14 @@ app.delete("/delete/:id", authMiddleware, async (req, res) => {
 
   console.log("Deleting:", id);
 
-  const fileIndex = files.findIndex((f) => f.public_id === id);
-
-  if (fileIndex === -1) {
-    return res.status(404).json({ message: "File not found" });
-  }
-
   try {
+    // ✅ Always delete from Cloudinary (even if local memory lost)
     await cloudinary.uploader.destroy(id, {
       resource_type: "raw",
     });
 
-    files.splice(fileIndex, 1);
+    // Optional: remove from memory if exists
+    files = files.filter((f) => f.public_id !== id);
 
     res.json({ message: "Deleted successfully" });
 
