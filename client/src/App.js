@@ -4,6 +4,70 @@ console.log("🔥 NEW FRONTEND LOADED");
 
 const API = process.env.REACT_APP_API_URL;
 
+// ================= STYLES =================
+
+const inputStyle = {
+  width: "100%",
+  padding: 10,
+  margin: "10px 0",
+  borderRadius: 5,
+  border: "1px solid #ccc"
+};
+
+const primaryBtn = {
+  width: "100%",
+  padding: 10,
+  marginTop: 10,
+  background: "#4CAF50",
+  color: "#fff",
+  border: "none",
+  borderRadius: 5,
+  cursor: "pointer"
+};
+
+const secondaryBtn = {
+  ...primaryBtn,
+  background: "#2196F3"
+};
+
+const dangerBtn = {
+  padding: 8,
+  marginLeft: 10,
+  background: "#f44336",
+  color: "#fff",
+  border: "none",
+  borderRadius: 5,
+  cursor: "pointer"
+};
+
+const logoutBtn = {
+  float: "right",
+  background: "#333",
+  color: "#fff",
+  border: "none",
+  padding: "5px 10px",
+  borderRadius: 5,
+  cursor: "pointer"
+};
+
+const linkBtn = {
+  background: "none",
+  border: "none",
+  color: "#2196F3",
+  cursor: "pointer",
+  marginBottom: 10
+};
+
+const fileCard = {
+  background: "#fafafa",
+  padding: 15,
+  marginTop: 10,
+  borderRadius: 8,
+  border: "1px solid #eee"
+};
+
+// ================= APP =================
+
 function App() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -142,36 +206,27 @@ function App() {
     try {
       const url = `${API}/delete?id=${encodeURIComponent(id)}`;
 
-      console.log("DELETE URL:", url);
-
       const res = await fetch(url, {
         method: "DELETE",
         headers: { Authorization: token },
       });
 
-      console.log("STATUS:", res.status);
-
       const data = await res.json();
-
-      console.log("RESPONSE:", data);
 
       if (!res.ok) {
         return alert(data.message || "Delete failed");
       }
 
       alert("Deleted successfully");
-
       getFiles();
 
     } catch (err) {
-      console.error("DELETE ERROR:", err);
+      console.error(err);
       alert("Delete failed");
     } finally {
       setLoading("");
     }
   };
-
- 
 
   // ================= DOWNLOAD =================
 
@@ -182,89 +237,127 @@ function App() {
     a.click();
   };
 
-  // ================= UI =================
+  // ================= LOGIN UI =================
 
   if (!token) {
     return (
-      <div style={{ textAlign: "center", marginTop: 50 }}>
-        <h1>🔐 Privacy Locker</h1>
+      <div style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100vh",
+        background: "#f4f6f8"
+      }}>
+        <div style={{
+          padding: 30,
+          width: 320,
+          background: "#fff",
+          borderRadius: 10,
+          boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+          textAlign: "center"
+        }}>
+          <h2>🔐 Privacy Locker</h2>
 
-        <input
-          placeholder="Email"
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <br /><br />
+          <p style={{ fontSize: 12, color: "gray" }}>
+            Secure file storage with encryption
+          </p>
 
-        <input
-          type={showPassword ? "text" : "password"}
-          placeholder="Password"
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <br />
+          <input
+            placeholder="Email"
+            onChange={(e) => setEmail(e.target.value)}
+            style={inputStyle}
+          />
 
-        <button onClick={() => setShowPassword(!showPassword)}>
-          {showPassword ? "Hide" : "Show"}
-        </button>
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="Password"
+            onChange={(e) => setPassword(e.target.value)}
+            style={inputStyle}
+          />
 
-        <br /><br />
+          <button onClick={() => setShowPassword(!showPassword)} style={linkBtn}>
+            {showPassword ? "Hide Password" : "Show Password"}
+          </button>
 
-        <button onClick={signup}>Signup</button>
-        <button onClick={login}>Login</button>
+          <button onClick={signup} style={primaryBtn}>
+            Signup
+          </button>
+
+          <button onClick={login} style={secondaryBtn}>
+            Login
+          </button>
+        </div>
       </div>
     );
   }
 
+  // ================= DASHBOARD UI =================
+
   return (
-    <div style={{ textAlign: "center", marginTop: 40 }}>
-      <h1>Privacy Locker</h1>
+    <div style={{ padding: 30, background: "#f4f6f8", minHeight: "100vh" }}>
+      <div style={{
+        maxWidth: 600,
+        margin: "auto",
+        background: "#fff",
+        padding: 25,
+        borderRadius: 10,
+        boxShadow: "0 4px 15px rgba(0,0,0,0.1)"
+      }}>
 
-      <button onClick={logout}>Logout</button>
+        <h2 style={{ textAlign: "center" }}>Privacy Locker</h2>
 
-      {loading && <p>{loading}</p>}
+        <p style={{ textAlign: "center", color: "gray" }}>
+          🔐 Files are encrypted. Download to access.
+        </p>
 
-      <br />
+        <button onClick={logout} style={logoutBtn}>
+          Logout
+        </button>
 
-      <input
-        id="fileInput"
-        type="file"
-        onChange={(e) => setFile(e.target.files[0])}
-      />
+        {loading && <p>{loading}</p>}
 
-      <br /><br />
+        <div style={{ marginTop: 20 }}>
+          <input
+            id="fileInput"
+            type="file"
+            onChange={(e) => setFile(e.target.files[0])}
+          />
 
-      <button onClick={uploadFile}>Upload</button>
+          <button onClick={uploadFile} style={primaryBtn}>
+            Upload
+          </button>
+        </div>
 
-      <h2>Your Files</h2>
+        <h3 style={{ marginTop: 20 }}>Your Files</h3>
 
-      {files.length === 0 ? (
-        <p>No files</p>
-      ) : (
-        <ul>
-          {files.map((f, i) => (
-            <li key={i}>
-              {f.originalName}
-              <br />
+        {files.length === 0 ? (
+          <p>No files uploaded</p>
+        ) : (
+          <ul style={{ listStyle: "none", padding: 0 }}>
+            {files.map((f, i) => (
+              <li key={i} style={fileCard}>
+                <b>{f.originalName}</b>
 
-            
+                <div style={{ marginTop: 10 }}>
+                  <button
+                    onClick={() => downloadFile(f.url, f.originalName)}
+                    style={primaryBtn}
+                  >
+                    Download 🔐
+                  </button>
 
-              <button onClick={() => downloadFile(f.url, f.originalName)}>
-                view/Download 🔒
-              </button>
-
-              <button
-                onClick={() => {
-                  console.log("DELETE BUTTON CLICKED");
-                  deleteFile(f.public_id, f.originalName);
-                }}
-              >
-                Delete
-              </button>
-
-              <br /><br />
-            </li>
-          ))}
-        </ul>
-      )}
+                  <button
+                    onClick={() => deleteFile(f.public_id, f.originalName)}
+                    style={dangerBtn}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
