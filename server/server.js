@@ -6,6 +6,7 @@ const CryptoJS = require("crypto-js");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const cloudinary = require("cloudinary").v2;
+const fetch = require("node-fetch"); // ✅ required
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -24,7 +25,7 @@ cloudinary.config({
 
 // ================== USER STORAGE ==================
 let users = [];
-let files = []; // store file metadata
+let files = [];
 
 // ================== AUTH ==================
 const authMiddleware = (req, res, next) => {
@@ -41,7 +42,7 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
-// ================== MULTER (MEMORY STORAGE) ==================
+// ================== MULTER ==================
 const upload = multer({ storage: multer.memoryStorage() });
 
 // ================== AUTH ROUTES ==================
@@ -72,13 +73,11 @@ app.post("/signup", async (req, res) => {
   }
 
   const existingUser = users.find((u) => u.email === email);
-
   if (existingUser) {
     return res.status(400).json({ message: "User already exists" });
   }
 
   const hashed = await bcrypt.hash(password, 10);
-
   users.push({ email, password: hashed });
 
   res.json({ message: "User registered successfully" });
@@ -92,19 +91,17 @@ app.post("/login", async (req, res) => {
   password = password?.trim();
 
   const user = users.find((u) => u.email === email);
-
   if (!user) return res.status(400).json({ message: "User not found" });
 
   const isMatch = await bcrypt.compare(password, user.password);
-
   if (!isMatch) return res.status(400).json({ message: "Invalid password" });
 
   const token = jwt.sign({ email }, JWT_SECRET);
-
   res.json({ token });
 });
 
-// ================== UPLOAD (ENCRYPT + CLOUDINARY) ==================
+// ================== UPLOAD ==================
+
 app.post("/upload", authMiddleware, upload.single("file"), async (req, res) => {
   try {
     const user = users.find((u) => u.email === req.user);
@@ -126,7 +123,7 @@ app.post("/upload", authMiddleware, upload.single("file"), async (req, res) => {
       }
     );
 
-    console.log("UPLOAD SUCCESS:", result.secure_url); // 👈 important
+    console.log("UPLOAD SUCCESS:", result.secure_url);
 
     files.push({
       user: req.user,
@@ -137,11 +134,10 @@ app.post("/upload", authMiddleware, upload.single("file"), async (req, res) => {
 
     res.json({
       message: "Encrypted & uploaded to cloud",
-      file: req.file.originalname,
     });
 
   } catch (error) {
-    console.error("UPLOAD ERROR:", error); // 👈 THIS IS WHAT WE NEED
+    console.error("UPLOAD ERROR:", error);
     res.status(500).json({ message: "Upload failed" });
   }
 });
@@ -156,36 +152,57 @@ app.get("/files", authMiddleware, (req, res) => {
 // ================== DOWNLOAD ==================
 
 app.get("/download/:id", authMiddleware, async (req, res) => {
-  const file = files.find((f) => f.public_id === req.params.id);
+  try {
+    const file = files.find((f) => f.public_id === req.params.id);
+    if (!file) return res.status(404).json({ message: "File not found" });
 
-  if (!file) return res.status(404).json({ message: "File not found" });
+    const user = users.find((u) => u.email === req.user);
 
-  const user = users.find((u) => u.email === req.user);
+    const response = await fetch(file.url);
+    const encryptedData = await response.text();
 
-  const response = await fetch(file.url);
-  const encryptedData = await response.text();
+    const bytes = CryptoJS.AES.decrypt(encryptedData, user.password);
+    const decrypted = Buffer.from(bytes.toString(CryptoJS.enc.Utf8), "base64");
 
-  const bytes = CryptoJS.AES.decrypt(encryptedData, user.password);
-  const decrypted = Buffer.from(bytes.toString(CryptoJS.enc.Utf8), "base64");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=${file.originalName}`
+    );
 
-  res.setHeader("Content-Disposition", `attachment; filename=${file.originalName}`);
-  res.send(decrypted);
+    res.send(decrypted);
+
+  } catch (error) {
+    console.error("DOWNLOAD ERROR:", error);
+    res.status(500).json({ message: "Download failed" });
+  }
 });
 
 // ================== DELETE ==================
 
 app.delete("/delete/:id", authMiddleware, async (req, res) => {
-  const fileIndex = files.findIndex((f) => f.public_id === req.params.id);
+  const id = req.params.id;
 
-  if (fileIndex === -1) return res.status(404).json({ message: "File not found" });
+  console.log("Deleting:", id);
 
-  await cloudinary.uploader.destroy(files[fileIndex].public_id, {
-    resource_type: "raw",
-  });
+  const fileIndex = files.findIndex((f) => f.public_id === id);
 
-  files.splice(fileIndex, 1);
+  if (fileIndex === -1) {
+    return res.status(404).json({ message: "File not found" });
+  }
 
-  res.json({ message: "Deleted successfully" });
+  try {
+    await cloudinary.uploader.destroy(id, {
+      resource_type: "raw",
+    });
+
+    files.splice(fileIndex, 1);
+
+    res.json({ message: "Deleted successfully" });
+
+  } catch (error) {
+    console.error("DELETE ERROR:", error);
+    res.status(500).json({ message: "Delete failed" });
+  }
 });
 
 // ================== SERVER ==================
