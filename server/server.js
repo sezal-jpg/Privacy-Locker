@@ -33,63 +33,62 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
-// ================== MULTER SETUP ==================
-
+// ================== MULTER ==================
 if (!fs.existsSync("uploads")) {
   fs.mkdirSync("uploads");
 }
 
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/");
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + "-" + file.originalname);
-  },
+  destination: (req, file, cb) => cb(null, "uploads/"),
+  filename: (req, file, cb) =>
+    cb(null, Date.now() + "-" + file.originalname),
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ storage });
 
 // ================== AUTH ROUTES ==================
 
-// ✅ FINAL SIGNUP (SUPER STRICT)
+// ✅ FINAL SIGNUP (STRICT + SAFE)
 app.post("/signup", async (req, res) => {
-  let { username, password } = req.body;
+  let username = req.body.username;
+  let password = req.body.password;
 
-  // 🚨 DEBUG (optional)
   console.log("Signup received:", username, password);
 
-  // type check
-  if (typeof username !== "string" || typeof password !== "string") {
+  // 🚨 FULL PROTECTION
+  if (
+    username === undefined ||
+    password === undefined ||
+    username === null ||
+    password === null ||
+    typeof username !== "string" ||
+    typeof password !== "string"
+  ) {
     return res.status(400).json({
-      message: "Invalid input format",
+      message: "Username and password are required",
     });
   }
 
-  // trim
   username = username.trim();
   password = password.trim();
 
-  // empty check
-  if (username.length === 0 || password.length === 0) {
+  if (username === "" || password === "") {
     return res.status(400).json({
       message: "Username and password cannot be empty",
     });
   }
 
-  // password strength
   if (password.length < 6) {
     return res.status(400).json({
       message: "Password must be at least 6 characters",
     });
   }
 
-  // duplicate check
   const existingUser = users.find((u) => u.username === username);
 
   if (existingUser) {
     return res.status(400).json({
-      message: "User already exists with this username",
+      message: "User already exists",
     });
   }
 
@@ -100,22 +99,26 @@ app.post("/signup", async (req, res) => {
   res.json({ message: "User registered successfully" });
 });
 
-// ✅ FINAL LOGIN (SUPER STRICT)
+// ✅ FINAL LOGIN
 app.post("/login", async (req, res) => {
-  let { username, password } = req.body;
+  let username = req.body.username;
+  let password = req.body.password;
 
-  if (typeof username !== "string" || typeof password !== "string") {
+  if (
+    typeof username !== "string" ||
+    typeof password !== "string"
+  ) {
     return res.status(400).json({
-      message: "Invalid input format",
+      message: "Invalid input",
     });
   }
 
   username = username.trim();
   password = password.trim();
 
-  if (username.length === 0 || password.length === 0) {
+  if (!username || !password) {
     return res.status(400).json({
-      message: "Username and password cannot be empty",
+      message: "Username and password required",
     });
   }
 
@@ -146,7 +149,7 @@ app.get("/api", (req, res) => {
   res.json({ message: "Privacy Locker API is running!" });
 });
 
-// ================== ENCRYPTED UPLOAD ==================
+// ================== FILE UPLOAD ==================
 
 app.post("/upload", authMiddleware, upload.single("file"), (req, res) => {
   const filePath = "uploads/" + req.file.filename;
@@ -162,29 +165,24 @@ app.post("/upload", authMiddleware, upload.single("file"), (req, res) => {
 
   fs.writeFileSync(filePath, encrypted);
 
-  res.json({
-    message: "File encrypted with user password",
-    file: req.file.filename,
-  });
+  res.json({ message: "Encrypted & uploaded", file: req.file.filename });
 });
 
 // ================== FILE LIST ==================
 
 app.get("/files", authMiddleware, (req, res) => {
-  const files = fs.readdirSync("uploads");
-  res.json(files);
+  res.json(fs.readdirSync("uploads"));
 });
 
 // ================== DOWNLOAD ==================
 
 app.get("/download/:filename", authMiddleware, (req, res) => {
   const filePath = "uploads/" + req.params.filename;
-
   const user = users.find((u) => u.username === req.user);
 
-  const encryptedData = fs.readFileSync(filePath, "utf-8");
+  const encrypted = fs.readFileSync(filePath, "utf-8");
 
-  const bytes = CryptoJS.AES.decrypt(encryptedData, user.password);
+  const bytes = CryptoJS.AES.decrypt(encrypted, user.password);
   const decrypted = Buffer.from(
     bytes.toString(CryptoJS.enc.Utf8),
     "base64"
@@ -201,12 +199,11 @@ app.get("/download/:filename", authMiddleware, (req, res) => {
 
 app.get("/view/:filename", authMiddleware, (req, res) => {
   const filePath = "uploads/" + req.params.filename;
-
   const user = users.find((u) => u.username === req.user);
 
-  const encryptedData = fs.readFileSync(filePath, "utf-8");
+  const encrypted = fs.readFileSync(filePath, "utf-8");
 
-  const bytes = CryptoJS.AES.decrypt(encryptedData, user.password);
+  const bytes = CryptoJS.AES.decrypt(encrypted, user.password);
   const decrypted = Buffer.from(
     bytes.toString(CryptoJS.enc.Utf8),
     "base64"
@@ -218,8 +215,6 @@ app.get("/view/:filename", authMiddleware, (req, res) => {
     res.setHeader("Content-Type", "image/" + ext);
   } else if (ext === "pdf") {
     res.setHeader("Content-Type", "application/pdf");
-  } else if (ext === "txt") {
-    res.setHeader("Content-Type", "text/plain");
   }
 
   res.send(decrypted);
@@ -232,7 +227,7 @@ app.delete("/delete/:filename", authMiddleware, (req, res) => {
 
   if (fs.existsSync(filePath)) {
     fs.unlinkSync(filePath);
-    res.json({ message: "File deleted successfully" });
+    res.json({ message: "Deleted successfully" });
   } else {
     res.status(404).json({ message: "File not found" });
   }

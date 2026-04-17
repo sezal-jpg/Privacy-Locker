@@ -13,25 +13,55 @@ function App() {
   // ================= AUTH =================
 
   const signup = async () => {
-    await fetch(API + "/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
-    alert("Signup successful!");
-  };
+    // ✅ FRONTEND VALIDATION (IMPORTANT)
+    if (!username || !password || username.trim() === "" || password.trim() === "") {
+      alert("Username and password are required");
+      return;
+    }
 
-  const login = async () => {
-    const res = await fetch(API + "/login", {
+    if (password.trim().length < 6) {
+      alert("Password must be at least 6 characters");
+      return;
+    }
+
+    const res = await fetch(API + "/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({
+        username: username.trim(),
+        password: password.trim(),
+      }),
     });
 
     const data = await res.json();
 
-    if (!data.token) {
-      alert("Login failed");
+    if (!res.ok) {
+      alert(data.message);
+      return;
+    }
+
+    alert("Signup successful!");
+  };
+
+  const login = async () => {
+    if (!username || !password || username.trim() === "" || password.trim() === "") {
+      alert("Enter username and password");
+      return;
+    }
+
+    const res = await fetch(API + "/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: username.trim(),
+        password: password.trim(),
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.token) {
+      alert(data.message || "Login failed");
       return;
     }
 
@@ -45,6 +75,7 @@ function App() {
     const res = await fetch(API + "/files", {
       headers: { Authorization: token },
     });
+
     const data = await res.json();
     setFiles(data);
   };
@@ -78,7 +109,6 @@ function App() {
     getFiles();
   };
 
-  // 🔥 FIXED VIEW
   const viewFile = async (f) => {
     const res = await fetch(API + "/view/" + f, {
       headers: { Authorization: token },
@@ -89,7 +119,6 @@ function App() {
     window.open(url);
   };
 
-  // 🔥 FIXED DOWNLOAD
   const downloadFile = async (f) => {
     const res = await fetch(API + "/download/" + f, {
       headers: { Authorization: token },
@@ -134,10 +163,12 @@ function App() {
     <div style={{ textAlign: "center", marginTop: "40px" }}>
       <h1>Privacy Locker</h1>
 
-      <button onClick={() => {
-        localStorage.removeItem("token");
-        setToken(null);
-      }}>
+      <button
+        onClick={() => {
+          localStorage.removeItem("token");
+          setToken(null);
+        }}
+      >
         Logout
       </button>
 
