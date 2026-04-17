@@ -1,6 +1,7 @@
-
 import React, { useState, useEffect } from "react";
+
 console.log("🔥 NEW FRONTEND LOADED");
+
 const API = process.env.REACT_APP_API_URL;
 
 function App() {
@@ -131,7 +132,7 @@ function App() {
     }
   };
 
-  // ================= DELETE (FINAL FIX) =================
+  // ================= DELETE =================
 
   const deleteFile = async (id, name) => {
     if (!window.confirm(`Delete "${name}"?`)) return;
@@ -141,18 +142,18 @@ function App() {
     try {
       const url = `${API}/delete?id=${encodeURIComponent(id)}`;
 
-      console.log("DELETE URL:", url); // DEBUG
+      console.log("DELETE URL:", url);
 
       const res = await fetch(url, {
         method: "DELETE",
         headers: { Authorization: token },
       });
 
-      console.log("STATUS:", res.status); // DEBUG
+      console.log("STATUS:", res.status);
 
       const data = await res.json();
 
-      console.log("RESPONSE:", data); // DEBUG
+      console.log("RESPONSE:", data);
 
       if (!res.ok) {
         return alert(data.message || "Delete failed");
@@ -170,35 +171,19 @@ function App() {
     }
   };
 
-  // ================= VIEW =================
+  // ================= VIEW (FIXED) =================
 
-  const viewFile = async (id) => {
-    const res = await fetch(
-      `${API}/view?id=${encodeURIComponent(id)}`,
-      { headers: { Authorization: token } }
-    );
-
-    const blob = await res.blob();
-    window.open(URL.createObjectURL(blob));
+  const viewFile = (url) => {
+    window.open(url, "_blank");
   };
 
-  // ================= DOWNLOAD =================
+  // ================= DOWNLOAD (FIXED) =================
 
-  const downloadFile = async (id, name) => {
-    const res = await fetch(
-      `${API}/download?id=${encodeURIComponent(id)}`,
-      { headers: { Authorization: token } }
-    );
-
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-
+  const downloadFile = (url, name) => {
     const a = document.createElement("a");
     a.href = url;
     a.download = name;
     a.click();
-
-    URL.revokeObjectURL(url);
   };
 
   // ================= UI =================
@@ -264,22 +249,22 @@ function App() {
               {f.originalName}
               <br />
 
-              <button onClick={() => viewFile(f.public_id)}>
+              <button onClick={() => viewFile(f.url)}>
                 View
               </button>
 
-              <button onClick={() => downloadFile(f.public_id, f.originalName)}>
+              <button onClick={() => downloadFile(f.url, f.originalName)}>
                 Download
               </button>
 
               <button
-onClick={() => {
-console.log("DELETE BUTTON CLICKED");
-    deleteFile(f.public_id, f.originalName);
-  }}
->
-  Delete
-</button>
+                onClick={() => {
+                  console.log("DELETE BUTTON CLICKED");
+                  deleteFile(f.public_id, f.originalName);
+                }}
+              >
+                Delete
+              </button>
 
               <br /><br />
             </li>

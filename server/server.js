@@ -6,7 +6,6 @@ const CryptoJS = require("crypto-js");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const cloudinary = require("cloudinary").v2;
-const fetch = require("node-fetch");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -83,7 +82,6 @@ app.post("/login", async (req, res) => {
 app.post("/upload", authMiddleware, upload.single("file"), async (req, res) => {
   try {
     const user = users.find((u) => u.email === req.user);
-    if (!user) return res.status(401).json({ message: "Login again" });
 
     const encrypted = CryptoJS.AES.encrypt(
       req.file.buffer.toString("base64"),
@@ -101,16 +99,14 @@ app.post("/upload", authMiddleware, upload.single("file"), async (req, res) => {
     files.push({
       user: req.user,
       public_id: result.public_id,
-      url: result.secure_url,
+      url: result.secure_url, // 🔥 IMPORTANT
       originalName: req.file.originalname,
     });
-
-    console.log("UPLOADED:", result.public_id);
 
     res.json({ message: "File uploaded successfully" });
 
   } catch (err) {
-    console.error("UPLOAD ERROR:", err);
+    console.error(err);
     res.status(500).json({ message: "Upload failed" });
   }
 });
@@ -121,129 +117,32 @@ app.get("/files", authMiddleware, (req, res) => {
   res.json(userFiles);
 });
 
-// ================== DOWNLOAD ==================
-app.get("/download", authMiddleware, async (req, res) => {
-  try {
-    const id = req.query.id;
-
-    if (!id)
-      return res.status(400).json({ message: "No file ID provided" });
-
-    const file = files.find(
-      (f) => f.public_id === id && f.user === req.user
-    );
-
-    if (!file)
-      return res.status(404).json({ message: "File not found" });
-
-    const user = users.find((u) => u.email === req.user);
-
-    const response = await fetch(file.url);
-    const encryptedData = await response.text();
-
-    const bytes = CryptoJS.AES.decrypt(encryptedData, user.password);
-    const decrypted = Buffer.from(
-      bytes.toString(CryptoJS.enc.Utf8),
-      "base64"
-    );
-
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${file.originalName}"`
-    );
-
-    res.send(decrypted);
-
-  } catch (err) {
-    console.error("DOWNLOAD ERROR:", err);
-    res.status(500).json({ message: "Download failed" });
-  }
-});
-
-// ================== VIEW ==================
-app.get("/view", authMiddleware, async (req, res) => {
-  try {
-    const id = req.query.id;
-
-    if (!id)
-      return res.status(400).json({ message: "No file ID provided" });
-
-    const file = files.find(
-      (f) => f.public_id === id && f.user === req.user
-    );
-
-    if (!file)
-      return res.status(404).json({ message: "File not found" });
-
-    const user = users.find((u) => u.email === req.user);
-
-    const response = await fetch(file.url);
-    const encryptedData = await response.text();
-
-    const bytes = CryptoJS.AES.decrypt(encryptedData, user.password);
-    const decrypted = Buffer.from(
-      bytes.toString(CryptoJS.enc.Utf8),
-      "base64"
-    );
-
-    res.send(decrypted);
-
-  } catch (err) {
-    console.error("VIEW ERROR:", err);
-    res.status(500).json({ message: "View failed" });
-  }
-});
-
-// ================== DELETE (FINAL FIX) ==================
+// ================== DELETE ==================
 app.delete("/delete", authMiddleware, async (req, res) => {
   try {
     const id = req.query.id;
 
-    if (!id) {
-      return res.status(400).json({ message: "No file ID provided" });
-    }
-
-    console.log("🧨 DELETE REQUEST ID:", id);
-
-    // 🔥 TRY BOTH TYPES (THIS IS THE REAL FIX)
     let result = await cloudinary.uploader.destroy(id, {
       resource_type: "raw",
     });
 
-    // If not found in raw, try as image (fallback)
     if (result.result === "not found") {
-      console.log("Trying image delete...");
       result = await cloudinary.uploader.destroy(id, {
         resource_type: "image",
       });
     }
 
-    console.log("🔥 CLOUDINARY RESPONSE:", result);
+    files = files.filter(
+      (f) => !(f.public_id === id && f.user === req.user)
+    );
 
-    if (result.result === "ok" || result.result === "not found") {
-      // remove from memory
-      files = files.filter(
-        (f) => !(f.public_id === id && f.user === req.user)
-      );
-
-      return res.json({ message: "Deleted successfully" });
-    }
-
-    return res.status(400).json({
-      message: "Delete failed",
-      cloudinary: result,
-    });
+    res.json({ message: "Deleted successfully" });
 
   } catch (err) {
-    console.error("❌ DELETE ERROR:", err);
-    res.status(500).json({
-      message: "Delete failed",
-      error: err.message,
-    });
+    res.status(500).json({ message: "Delete failed" });
   }
 });
 
-// ================== SERVER ==================
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
