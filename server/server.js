@@ -17,9 +17,9 @@ app.use(express.json());
 
 // ================== CLOUDINARY CONFIG ==================
 cloudinary.config({
-  cloud_name: "YOUR_CLOUD_NAME",
-  api_key: "YOUR_API_KEY",
-  api_secret: "YOUR_API_SECRET",
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.CLOUD_API_KEY,
+  api_secret: process.env.CLOUD_API_SECRET,
 });
 
 // ================== USER STORAGE ==================
@@ -105,35 +105,45 @@ app.post("/login", async (req, res) => {
 });
 
 // ================== UPLOAD (ENCRYPT + CLOUDINARY) ==================
-
 app.post("/upload", authMiddleware, upload.single("file"), async (req, res) => {
-  const user = users.find((u) => u.email === req.user);
+  try {
+    const user = users.find((u) => u.email === req.user);
 
-  const fileBuffer = req.file.buffer;
+    const fileBuffer = req.file.buffer;
 
-  // 🔐 ENCRYPT FILE
-  const encrypted = CryptoJS.AES.encrypt(
-    fileBuffer.toString("base64"),
-    user.password
-  ).toString();
+    // 🔐 Encrypt file
+    const encrypted = CryptoJS.AES.encrypt(
+      fileBuffer.toString("base64"),
+      user.password
+    ).toString();
 
-  // Upload encrypted string as file
-  const result = await cloudinary.uploader.upload(
-    `data:text/plain;base64,${Buffer.from(encrypted).toString("base64")}`,
-    {
-      folder: "privacy-locker",
-      resource_type: "raw",
-    }
-  );
+    // ☁️ Upload to Cloudinary
+    const result = await cloudinary.uploader.upload(
+      "data:text/plain;base64," + Buffer.from(encrypted).toString("base64"),
+      {
+        folder: "privacy-locker",
+        resource_type: "raw",
+      }
+    );
 
-  files.push({
-    user: req.user,
-    url: result.secure_url,
-    public_id: result.public_id,
-    originalName: req.file.originalname,
-  });
+    console.log("UPLOAD SUCCESS:", result.secure_url); // 👈 important
 
-  res.json({ message: "Encrypted & uploaded to cloud", file: req.file.originalname });
+    files.push({
+      user: req.user,
+      url: result.secure_url,
+      public_id: result.public_id,
+      originalName: req.file.originalname,
+    });
+
+    res.json({
+      message: "Encrypted & uploaded to cloud",
+      file: req.file.originalname,
+    });
+
+  } catch (error) {
+    console.error("UPLOAD ERROR:", error); // 👈 THIS IS WHAT WE NEED
+    res.status(500).json({ message: "Upload failed" });
+  }
 });
 
 // ================== FILE LIST ==================
