@@ -26,7 +26,7 @@ cloudinary.config({
 let users = [];
 let files = [];
 
-// ================== AUTH MIDDLEWARE ==================
+// ================== AUTH ==================
 const authMiddleware = (req, res, next) => {
   const token = req.headers.authorization;
   if (!token) return res.status(401).json({ message: "No token" });
@@ -85,7 +85,6 @@ app.post("/upload", authMiddleware, upload.single("file"), async (req, res) => {
     const user = users.find((u) => u.email === req.user);
     if (!user) return res.status(401).json({ message: "Login again" });
 
-    // Encrypt the file using user's hashed password
     const encrypted = CryptoJS.AES.encrypt(
       req.file.buffer.toString("base64"),
       user.password
@@ -106,11 +105,12 @@ app.post("/upload", authMiddleware, upload.single("file"), async (req, res) => {
       originalName: req.file.originalname,
     });
 
-    console.log("UPLOADED public_id:", result.public_id);
+    console.log("UPLOADED:", result.public_id);
 
     res.json({ message: "File uploaded successfully" });
+
   } catch (err) {
-    console.error("Upload error:", err);
+    console.error("UPLOAD ERROR:", err);
     res.status(500).json({ message: "Upload failed" });
   }
 });
@@ -124,12 +124,17 @@ app.get("/files", authMiddleware, (req, res) => {
 // ================== DOWNLOAD ==================
 app.get("/download", authMiddleware, async (req, res) => {
   try {
-    // ✅ Use query param to avoid issues with slashes in public_id
     const id = req.query.id;
-    if (!id) return res.status(400).json({ message: "No file ID provided" });
 
-    const file = files.find((f) => f.public_id === id && f.user === req.user);
-    if (!file) return res.status(404).json({ message: "File not found" });
+    if (!id)
+      return res.status(400).json({ message: "No file ID provided" });
+
+    const file = files.find(
+      (f) => f.public_id === id && f.user === req.user
+    );
+
+    if (!file)
+      return res.status(404).json({ message: "File not found" });
 
     const user = users.find((u) => u.email === req.user);
 
@@ -137,15 +142,20 @@ app.get("/download", authMiddleware, async (req, res) => {
     const encryptedData = await response.text();
 
     const bytes = CryptoJS.AES.decrypt(encryptedData, user.password);
-    const decrypted = Buffer.from(bytes.toString(CryptoJS.enc.Utf8), "base64");
+    const decrypted = Buffer.from(
+      bytes.toString(CryptoJS.enc.Utf8),
+      "base64"
+    );
 
     res.setHeader(
       "Content-Disposition",
       `attachment; filename="${file.originalName}"`
     );
+
     res.send(decrypted);
+
   } catch (err) {
-    console.error("Download error:", err);
+    console.error("DOWNLOAD ERROR:", err);
     res.status(500).json({ message: "Download failed" });
   }
 });
@@ -153,12 +163,17 @@ app.get("/download", authMiddleware, async (req, res) => {
 // ================== VIEW ==================
 app.get("/view", authMiddleware, async (req, res) => {
   try {
-    // ✅ Use query param to avoid issues with slashes in public_id
     const id = req.query.id;
-    if (!id) return res.status(400).json({ message: "No file ID provided" });
 
-    const file = files.find((f) => f.public_id === id && f.user === req.user);
-    if (!file) return res.status(404).json({ message: "File not found" });
+    if (!id)
+      return res.status(400).json({ message: "No file ID provided" });
+
+    const file = files.find(
+      (f) => f.public_id === id && f.user === req.user
+    );
+
+    if (!file)
+      return res.status(404).json({ message: "File not found" });
 
     const user = users.find((u) => u.email === req.user);
 
@@ -166,55 +181,48 @@ app.get("/view", authMiddleware, async (req, res) => {
     const encryptedData = await response.text();
 
     const bytes = CryptoJS.AES.decrypt(encryptedData, user.password);
-    const decrypted = Buffer.from(bytes.toString(CryptoJS.enc.Utf8), "base64");
+    const decrypted = Buffer.from(
+      bytes.toString(CryptoJS.enc.Utf8),
+      "base64"
+    );
 
     res.send(decrypted);
+
   } catch (err) {
-    console.error("View error:", err);
+    console.error("VIEW ERROR:", err);
     res.status(500).json({ message: "View failed" });
   }
 });
 
-// ================== DELETE ==================
+// ================== DELETE (FINAL FIX) ==================
 app.delete("/delete", authMiddleware, async (req, res) => {
   try {
-    // ✅ FIX 1: Use query param instead of route param
-    // This avoids Express failing to decode slashes (%2F) in public_id like "privacy-locker/abc123"
     const id = req.query.id;
-    if (!id) return res.status(400).json({ message: "No file ID provided" });
 
-    console.log("Attempting to delete public_id:", id);
+    if (!id)
+      return res.status(400).json({ message: "No file ID provided" });
 
-    // ✅ FIX 2: Verify file belongs to requesting user
-    const fileIndex = files.findIndex(
-      (f) => f.public_id === id && f.user === req.user
-    );
+    console.log("Deleting:", id);
 
-    if (fileIndex === -1) {
-      return res.status(404).json({ message: "File not found" });
-    }
-
-    // ✅ FIX 3: Delete from Cloudinary with correct resource_type
     const result = await cloudinary.uploader.destroy(id, {
       resource_type: "raw",
     });
 
-    console.log("Cloudinary delete result:", result);
+    console.log("Cloudinary result:", result);
 
     if (result.result === "ok" || result.result === "not found") {
-      // ✅ FIX 4: Remove from local files array
-      files.splice(fileIndex, 1);
+      files = files.filter(
+        (f) => !(f.public_id === id && f.user === req.user)
+      );
+
       return res.json({ message: "File deleted successfully" });
     }
 
-    // If Cloudinary returns something unexpected, log and return error
-    res.status(400).json({
-      message: "Delete failed",
-      cloudinaryResult: result,
-    });
+    res.status(400).json({ message: "Delete failed", result });
+
   } catch (err) {
-    console.error("Delete error:", err);
-    res.status(500).json({ message: "Delete failed", error: err.message });
+    console.error("DELETE ERROR:", err);
+    res.status(500).json({ message: "Delete failed" });
   }
 });
 
