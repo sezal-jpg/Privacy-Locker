@@ -52,13 +52,18 @@ const upload = multer({ storage: storage });
 
 // ================== AUTH ROUTES ==================
 
-// ✅ Signup with validation
+// ✅ FINAL SIGNUP (FULL VALIDATION)
 app.post("/signup", async (req, res) => {
-  const { username, password } = req.body;
+  let { username, password } = req.body;
 
+  // trim inputs
+  username = username?.trim();
+  password = password?.trim();
+
+  // validation
   if (!username || !password) {
     return res.status(400).json({
-      message: "Username and password are required",
+      message: "Username and password cannot be empty",
     });
   }
 
@@ -77,18 +82,22 @@ app.post("/signup", async (req, res) => {
   }
 
   const hashed = await bcrypt.hash(password, 10);
+
   users.push({ username, password: hashed });
 
   res.json({ message: "User registered successfully" });
 });
 
-// ✅ Login with validation
+// ✅ FINAL LOGIN (FULL VALIDATION)
 app.post("/login", async (req, res) => {
-  const { username, password } = req.body;
+  let { username, password } = req.body;
+
+  username = username?.trim();
+  password = password?.trim();
 
   if (!username || !password) {
     return res.status(400).json({
-      message: "Username and password are required",
+      message: "Username and password cannot be empty",
     });
   }
 
