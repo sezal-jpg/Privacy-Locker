@@ -171,21 +171,7 @@ function App() {
     }
   };
 
-  // ================= VIEW (FINAL FIX) =================
-
-  const viewFile = (url, name) => {
-    const ext = name.split(".").pop().toLowerCase();
-
-    if (["jpg", "jpeg", "png", "gif", "pdf"].includes(ext)) {
-      window.open(url, "_blank"); // view
-    } else {
-      // fallback → download
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = name;
-      a.click();
-    }
-  };
+ 
 
   // ================= DOWNLOAD =================
 
@@ -259,12 +245,10 @@ function App() {
               {f.originalName}
               <br />
 
-              <button onClick={() => viewFile(f.url, f.originalName)}>
-                View
-              </button>
+            
 
               <button onClick={() => downloadFile(f.url, f.originalName)}>
-                Download
+                view/Download 🔒
               </button>
 
               <button
