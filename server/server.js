@@ -174,7 +174,7 @@ app.delete("/delete/:id", authMiddleware, async (req, res) => {
 
   console.log("Deleting:", id);
 
-  // ✅ ensure correct Cloudinary path
+  // ✅ Ensure correct path
   if (!id.startsWith("privacy-locker/")) {
     id = "privacy-locker/" + id;
   }
@@ -184,12 +184,17 @@ app.delete("/delete/:id", authMiddleware, async (req, res) => {
       resource_type: "raw",
     });
 
-    console.log("Delete result:", result);
+    console.log("Cloudinary result:", result);
 
-    res.json({ message: "Deleted successfully" });
+    // ✅ IMPORTANT FIX
+    if (result.result === "ok" || result.result === "not found") {
+      return res.json({ message: "Deleted successfully" });
+    }
 
-  } catch (err) {
-    console.error("DELETE ERROR:", err);
+    return res.status(400).json({ message: "Delete failed" });
+
+  } catch (error) {
+    console.error("DELETE ERROR:", error);
     res.status(500).json({ message: "Delete failed" });
   }
 });
