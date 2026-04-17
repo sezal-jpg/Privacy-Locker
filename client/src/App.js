@@ -171,13 +171,23 @@ function App() {
     }
   };
 
-  // ================= VIEW (FIXED) =================
+  // ================= VIEW (FINAL FIX) =================
 
-  const viewFile = (url) => {
-    window.open(url, "_blank");
+  const viewFile = (url, name) => {
+    const ext = name.split(".").pop().toLowerCase();
+
+    if (["jpg", "jpeg", "png", "gif", "pdf"].includes(ext)) {
+      window.open(url, "_blank"); // view
+    } else {
+      // fallback → download
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      a.click();
+    }
   };
 
-  // ================= DOWNLOAD (FIXED) =================
+  // ================= DOWNLOAD =================
 
   const downloadFile = (url, name) => {
     const a = document.createElement("a");
@@ -249,7 +259,7 @@ function App() {
               {f.originalName}
               <br />
 
-              <button onClick={() => viewFile(f.url)}>
+              <button onClick={() => viewFile(f.url, f.originalName)}>
                 View
               </button>
 
