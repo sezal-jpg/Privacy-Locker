@@ -36,7 +36,10 @@ function App() {
       const res = await fetch(API + "/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), password: password.trim() }),
+        body: JSON.stringify({
+          email: email.trim(),
+          password: password.trim(),
+        }),
       });
 
       const data = await res.json();
@@ -60,7 +63,10 @@ function App() {
       const res = await fetch(API + "/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), password: password.trim() }),
+        body: JSON.stringify({
+          email: email.trim(),
+          password: password.trim(),
+        }),
       });
 
       const data = await res.json();
@@ -87,7 +93,6 @@ function App() {
 
       const data = await res.json();
 
-      // ✅ Prevent crash if backend sends wrong data
       setFiles(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
@@ -126,14 +131,37 @@ function App() {
     }
   };
 
-  const deleteFile = async (id) => {
-    await fetch(API + "/delete/" + id, {
-      method: "DELETE",
-      headers: { Authorization: token },
-    });
+  // ================= DELETE (FINAL FIX) =================
 
-    getFiles();
+  const deleteFile = async (id) => {
+    try {
+      console.log("Deleting file:", id); // 🔍 debug
+
+      const res = await fetch(API + "/delete/" + id, {
+        method: "DELETE",
+        headers: { Authorization: token },
+      });
+
+      const data = await res.json();
+
+      console.log("Delete response:", data); // 🔍 debug
+
+      if (!res.ok) {
+        alert(data.message || "Delete failed");
+        return;
+      }
+
+      alert(data.message || "Deleted successfully");
+
+      getFiles(); // refresh UI
+
+    } catch (error) {
+      console.error("Delete error:", error);
+      alert("Delete failed");
+    }
   };
+
+  // ================= VIEW =================
 
   const viewFile = async (id) => {
     const res = await fetch(API + "/view/" + id, {
@@ -144,6 +172,8 @@ function App() {
     const url = window.URL.createObjectURL(blob);
     window.open(url);
   };
+
+  // ================= DOWNLOAD =================
 
   const downloadFile = async (id) => {
     const res = await fetch(API + "/download/" + id, {
@@ -166,7 +196,10 @@ function App() {
       <div style={{ textAlign: "center", marginTop: "50px" }}>
         <h1>Privacy Locker 🔐</h1>
 
-        <input placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
+        <input
+          placeholder="Email"
+          onChange={(e) => setEmail(e.target.value)}
+        />
         <br /><br />
 
         <input
@@ -218,7 +251,9 @@ function App() {
               {f.originalName}
               <br />
 
-              <button onClick={() => viewFile(f.public_id)}>View</button>
+              <button onClick={() => viewFile(f.public_id)}>
+                View
+              </button>
               <br />
 
               <button onClick={() => downloadFile(f.public_id)}>
@@ -226,7 +261,10 @@ function App() {
               </button>
               <br />
 
-              <button onClick={() => deleteFile(f.public_id)}>
+              <button onClick={() => {
+                console.log("Clicked delete:", f.public_id);
+                deleteFile(f.public_id);
+              }}>
                 Delete
               </button>
             </li>
