@@ -52,27 +52,39 @@ const upload = multer({ storage: storage });
 
 // ================== AUTH ROUTES ==================
 
-// ✅ FINAL SIGNUP (FULL VALIDATION)
+// ✅ FINAL SIGNUP (SUPER STRICT)
 app.post("/signup", async (req, res) => {
   let { username, password } = req.body;
 
-  // trim inputs
-  username = username?.trim();
-  password = password?.trim();
+  // 🚨 DEBUG (optional)
+  console.log("Signup received:", username, password);
 
-  // validation
-  if (!username || !password) {
+  // type check
+  if (typeof username !== "string" || typeof password !== "string") {
+    return res.status(400).json({
+      message: "Invalid input format",
+    });
+  }
+
+  // trim
+  username = username.trim();
+  password = password.trim();
+
+  // empty check
+  if (username.length === 0 || password.length === 0) {
     return res.status(400).json({
       message: "Username and password cannot be empty",
     });
   }
 
+  // password strength
   if (password.length < 6) {
     return res.status(400).json({
       message: "Password must be at least 6 characters",
     });
   }
 
+  // duplicate check
   const existingUser = users.find((u) => u.username === username);
 
   if (existingUser) {
@@ -88,14 +100,20 @@ app.post("/signup", async (req, res) => {
   res.json({ message: "User registered successfully" });
 });
 
-// ✅ FINAL LOGIN (FULL VALIDATION)
+// ✅ FINAL LOGIN (SUPER STRICT)
 app.post("/login", async (req, res) => {
   let { username, password } = req.body;
 
-  username = username?.trim();
-  password = password?.trim();
+  if (typeof username !== "string" || typeof password !== "string") {
+    return res.status(400).json({
+      message: "Invalid input format",
+    });
+  }
 
-  if (!username || !password) {
+  username = username.trim();
+  password = password.trim();
+
+  if (username.length === 0 || password.length === 0) {
     return res.status(400).json({
       message: "Username and password cannot be empty",
     });
