@@ -26,7 +26,7 @@ cloudinary.config({
 let users = [];
 let files = [];
 
-// ================== AUTH ==================
+// ================== AUTH MIDDLEWARE ==================
 const authMiddleware = (req, res, next) => {
   const token = req.headers.authorization;
   if (!token) return res.status(401).json({ message: "No token" });
@@ -54,7 +54,7 @@ app.post("/signup", async (req, res) => {
     return res.status(400).json({ message: "Email & password required" });
 
   if (users.find((u) => u.email === email))
-    return res.status(400).json({ message: "User exists" });
+    return res.status(400).json({ message: "User already exists" });
 
   const hashed = await bcrypt.hash(password, 10);
   users.push({ email, password: hashed });
@@ -85,6 +85,7 @@ app.post("/upload", authMiddleware, upload.single("file"), async (req, res) => {
     const user = users.find((u) => u.email === req.user);
     if (!user) return res.status(401).json({ message: "Login again" });
 
+    // Encrypt the file using user's hashed password
     const encrypted = CryptoJS.AES.encrypt(
       req.file.buffer.toString("base64"),
       user.password
@@ -105,26 +106,29 @@ app.post("/upload", authMiddleware, upload.single("file"), async (req, res) => {
       originalName: req.file.originalname,
     });
 
-    console.log("UPLOAD:", result.public_id);
+    console.log("UPLOADED public_id:", result.public_id);
 
-    res.json({ message: "Uploaded" });
+    res.json({ message: "File uploaded successfully" });
   } catch (err) {
-    console.error(err);
+    console.error("Upload error:", err);
     res.status(500).json({ message: "Upload failed" });
   }
 });
 
 // ================== FILE LIST ==================
 app.get("/files", authMiddleware, (req, res) => {
-  res.json(files.filter((f) => f.user === req.user));
+  const userFiles = files.filter((f) => f.user === req.user);
+  res.json(userFiles);
 });
 
 // ================== DOWNLOAD ==================
-app.get("/download/:id", authMiddleware, async (req, res) => {
+app.get("/download", authMiddleware, async (req, res) => {
   try {
-    const id = decodeURIComponent(req.params.id);
-    const file = files.find((f) => f.public_id === id);
+    // ✅ Use query param to avoid issues with slashes in public_id
+    const id = req.query.id;
+    if (!id) return res.status(400).json({ message: "No file ID provided" });
 
+    const file = files.find((f) => f.public_id === id && f.user === req.user);
     if (!file) return res.status(404).json({ message: "File not found" });
 
     const user = users.find((u) => u.email === req.user);
@@ -137,36 +141,80 @@ app.get("/download/:id", authMiddleware, async (req, res) => {
 
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename=${file.originalName}`
+      `attachment; filename="${file.originalName}"`
     );
-
     res.send(decrypted);
   } catch (err) {
+    console.error("Download error:", err);
     res.status(500).json({ message: "Download failed" });
   }
 });
 
-// ================== DELETE (FINAL FIX) ==================
-app.delete("/delete/:id", authMiddleware, async (req, res) => {
+// ================== VIEW ==================
+app.get("/view", authMiddleware, async (req, res) => {
   try {
-    const id = decodeURIComponent(req.params.id);
+    // ✅ Use query param to avoid issues with slashes in public_id
+    const id = req.query.id;
+    if (!id) return res.status(400).json({ message: "No file ID provided" });
 
-    console.log("Deleting:", id);
+    const file = files.find((f) => f.public_id === id && f.user === req.user);
+    if (!file) return res.status(404).json({ message: "File not found" });
 
+    const user = users.find((u) => u.email === req.user);
+
+    const response = await fetch(file.url);
+    const encryptedData = await response.text();
+
+    const bytes = CryptoJS.AES.decrypt(encryptedData, user.password);
+    const decrypted = Buffer.from(bytes.toString(CryptoJS.enc.Utf8), "base64");
+
+    res.send(decrypted);
+  } catch (err) {
+    console.error("View error:", err);
+    res.status(500).json({ message: "View failed" });
+  }
+});
+
+// ================== DELETE ==================
+app.delete("/delete", authMiddleware, async (req, res) => {
+  try {
+    // ✅ FIX 1: Use query param instead of route param
+    // This avoids Express failing to decode slashes (%2F) in public_id like "privacy-locker/abc123"
+    const id = req.query.id;
+    if (!id) return res.status(400).json({ message: "No file ID provided" });
+
+    console.log("Attempting to delete public_id:", id);
+
+    // ✅ FIX 2: Verify file belongs to requesting user
+    const fileIndex = files.findIndex(
+      (f) => f.public_id === id && f.user === req.user
+    );
+
+    if (fileIndex === -1) {
+      return res.status(404).json({ message: "File not found" });
+    }
+
+    // ✅ FIX 3: Delete from Cloudinary with correct resource_type
     const result = await cloudinary.uploader.destroy(id, {
       resource_type: "raw",
     });
 
-    console.log("Cloudinary:", result);
+    console.log("Cloudinary delete result:", result);
 
     if (result.result === "ok" || result.result === "not found") {
-      return res.json({ message: "Deleted successfully" });
+      // ✅ FIX 4: Remove from local files array
+      files.splice(fileIndex, 1);
+      return res.json({ message: "File deleted successfully" });
     }
 
-    res.status(400).json({ message: "Delete failed" });
+    // If Cloudinary returns something unexpected, log and return error
+    res.status(400).json({
+      message: "Delete failed",
+      cloudinaryResult: result,
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Delete failed" });
+    console.error("Delete error:", err);
+    res.status(500).json({ message: "Delete failed", error: err.message });
   }
 });
 
