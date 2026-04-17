@@ -169,19 +169,18 @@ app.get("/download/:id", authMiddleware, async (req, res) => {
 });
 
 // ================== DELETE (FINAL FIX) ==================
-app.delete("/delete/:id", authMiddleware, async (req, res) => {
+app.delete("/delete/*", authMiddleware, async (req, res) => {
   try {
-    const id = decodeURIComponent(req.params.id);
+    const id = req.params[0]; // 🔥 gets FULL path
 
-    console.log("Deleting ID:", id);
+    console.log("Deleting FULL ID:", id);
 
     const result = await cloudinary.uploader.destroy(id, {
       resource_type: "raw",
     });
 
-    console.log("Cloudinary response:", result);
+    console.log("Cloudinary result:", result);
 
-    // ✅ Treat both as success
     if (result.result === "ok" || result.result === "not found") {
       return res.json({ message: "Deleted successfully" });
     }
