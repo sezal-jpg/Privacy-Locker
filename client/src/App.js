@@ -3,8 +3,10 @@ import React, { useState, useEffect } from "react";
 function App() {
   const API = process.env.REACT_APP_API_URL;
 
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
   const [token, setToken] = useState(localStorage.getItem("token"));
 
   const [file, setFile] = useState(null);
@@ -13,9 +15,15 @@ function App() {
   // ================= AUTH =================
 
   const signup = async () => {
-    // ✅ FRONTEND VALIDATION (IMPORTANT)
-    if (!username || !password || username.trim() === "" || password.trim() === "") {
-      alert("Username and password are required");
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!email || !password || email.trim() === "" || password.trim() === "") {
+      alert("Email and password are required");
+      return;
+    }
+
+    if (!emailRegex.test(email)) {
+      alert("Enter a valid email");
       return;
     }
 
@@ -28,7 +36,7 @@ function App() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        username: username.trim(),
+        email: email.trim(),
         password: password.trim(),
       }),
     });
@@ -44,8 +52,8 @@ function App() {
   };
 
   const login = async () => {
-    if (!username || !password || username.trim() === "" || password.trim() === "") {
-      alert("Enter username and password");
+    if (!email || !password || email.trim() === "" || password.trim() === "") {
+      alert("Enter email and password");
       return;
     }
 
@@ -53,7 +61,7 @@ function App() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        username: username.trim(),
+        email: email.trim(),
         password: password.trim(),
       }),
     });
@@ -141,16 +149,22 @@ function App() {
         <h1>Privacy Locker 🔐</h1>
 
         <input
-          placeholder="Username"
-          onChange={(e) => setUsername(e.target.value)}
+          placeholder="Email"
+          onChange={(e) => setEmail(e.target.value)}
         />
         <br /><br />
 
         <input
-          type="password"
+          type={showPassword ? "text" : "password"}
           placeholder="Password"
           onChange={(e) => setPassword(e.target.value)}
         />
+        <br />
+
+        <button onClick={() => setShowPassword(!showPassword)}>
+          {showPassword ? "Hide Password" : "Show Password"}
+        </button>
+
         <br /><br />
 
         <button onClick={signup}>Signup</button>

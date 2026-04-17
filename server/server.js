@@ -26,7 +26,7 @@ const authMiddleware = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded.username;
+    req.user = decoded.email; // ✅ FIXED
     next();
   } catch {
     res.status(401).json({ message: "Invalid token" });
@@ -48,33 +48,33 @@ const upload = multer({ storage });
 
 // ================== AUTH ROUTES ==================
 
-// ✅ FINAL SIGNUP (STRICT + SAFE)
+// ✅ SIGNUP (EMAIL BASED)
 app.post("/signup", async (req, res) => {
-  let username = req.body.username;
-  let password = req.body.password;
+  let { email, password } = req.body;
 
-  console.log("Signup received:", username, password);
+  console.log("Signup:", email, password);
 
-  // 🚨 FULL PROTECTION
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
   if (
-    username === undefined ||
-    password === undefined ||
-    username === null ||
-    password === null ||
-    typeof username !== "string" ||
+    typeof email !== "string" ||
     typeof password !== "string"
   ) {
+    return res.status(400).json({ message: "Invalid input format" });
+  }
+
+  email = email.trim();
+  password = password.trim();
+
+  if (!email || !password) {
     return res.status(400).json({
-      message: "Username and password are required",
+      message: "Email and password are required",
     });
   }
 
-  username = username.trim();
-  password = password.trim();
-
-  if (username === "" || password === "") {
+  if (!emailRegex.test(email)) {
     return res.status(400).json({
-      message: "Username and password cannot be empty",
+      message: "Invalid email format",
     });
   }
 
@@ -84,7 +84,7 @@ app.post("/signup", async (req, res) => {
     });
   }
 
-  const existingUser = users.find((u) => u.username === username);
+  const existingUser = users.find((u) => u.email === email);
 
   if (existingUser) {
     return res.status(400).json({
@@ -94,35 +94,32 @@ app.post("/signup", async (req, res) => {
 
   const hashed = await bcrypt.hash(password, 10);
 
-  users.push({ username, password: hashed });
+  users.push({ email, password: hashed });
 
   res.json({ message: "User registered successfully" });
 });
 
-// ✅ FINAL LOGIN
+// ✅ LOGIN (EMAIL BASED)
 app.post("/login", async (req, res) => {
-  let username = req.body.username;
-  let password = req.body.password;
+  let { email, password } = req.body;
 
   if (
-    typeof username !== "string" ||
+    typeof email !== "string" ||
     typeof password !== "string"
   ) {
-    return res.status(400).json({
-      message: "Invalid input",
-    });
+    return res.status(400).json({ message: "Invalid input" });
   }
 
-  username = username.trim();
+  email = email.trim();
   password = password.trim();
 
-  if (!username || !password) {
+  if (!email || !password) {
     return res.status(400).json({
-      message: "Username and password required",
+      message: "Email and password required",
     });
   }
 
-  const user = users.find((u) => u.username === username);
+  const user = users.find((u) => u.email === email);
 
   if (!user) {
     return res.status(400).json({ message: "User not found" });
@@ -134,7 +131,7 @@ app.post("/login", async (req, res) => {
     return res.status(400).json({ message: "Invalid password" });
   }
 
-  const token = jwt.sign({ username }, JWT_SECRET);
+  const token = jwt.sign({ email }, JWT_SECRET); // ✅ FIXED
 
   res.json({ token });
 });
@@ -154,7 +151,7 @@ app.get("/api", (req, res) => {
 app.post("/upload", authMiddleware, upload.single("file"), (req, res) => {
   const filePath = "uploads/" + req.file.filename;
 
-  const user = users.find((u) => u.username === req.user);
+  const user = users.find((u) => u.email === req.user); // ✅ FIXED
 
   const fileData = fs.readFileSync(filePath);
 
@@ -178,7 +175,8 @@ app.get("/files", authMiddleware, (req, res) => {
 
 app.get("/download/:filename", authMiddleware, (req, res) => {
   const filePath = "uploads/" + req.params.filename;
-  const user = users.find((u) => u.username === req.user);
+
+  const user = users.find((u) => u.email === req.user);
 
   const encrypted = fs.readFileSync(filePath, "utf-8");
 
@@ -199,7 +197,8 @@ app.get("/download/:filename", authMiddleware, (req, res) => {
 
 app.get("/view/:filename", authMiddleware, (req, res) => {
   const filePath = "uploads/" + req.params.filename;
-  const user = users.find((u) => u.username === req.user);
+
+  const user = users.find((u) => u.email === req.user);
 
   const encrypted = fs.readFileSync(filePath, "utf-8");
 
