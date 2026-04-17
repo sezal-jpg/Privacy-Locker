@@ -199,30 +199,47 @@ app.delete("/delete", authMiddleware, async (req, res) => {
   try {
     const id = req.query.id;
 
-    if (!id)
+    if (!id) {
       return res.status(400).json({ message: "No file ID provided" });
+    }
 
-    console.log("Deleting:", id);
+    console.log("🧨 DELETE REQUEST ID:", id);
 
-    const result = await cloudinary.uploader.destroy(id, {
+    // 🔥 TRY BOTH TYPES (THIS IS THE REAL FIX)
+    let result = await cloudinary.uploader.destroy(id, {
       resource_type: "raw",
     });
 
-    console.log("Cloudinary result:", result);
+    // If not found in raw, try as image (fallback)
+    if (result.result === "not found") {
+      console.log("Trying image delete...");
+      result = await cloudinary.uploader.destroy(id, {
+        resource_type: "image",
+      });
+    }
+
+    console.log("🔥 CLOUDINARY RESPONSE:", result);
 
     if (result.result === "ok" || result.result === "not found") {
+      // remove from memory
       files = files.filter(
         (f) => !(f.public_id === id && f.user === req.user)
       );
 
-      return res.json({ message: "File deleted successfully" });
+      return res.json({ message: "Deleted successfully" });
     }
 
-    res.status(400).json({ message: "Delete failed", result });
+    return res.status(400).json({
+      message: "Delete failed",
+      cloudinary: result,
+    });
 
   } catch (err) {
-    console.error("DELETE ERROR:", err);
-    res.status(500).json({ message: "Delete failed" });
+    console.error("❌ DELETE ERROR:", err);
+    res.status(500).json({
+      message: "Delete failed",
+      error: err.message,
+    });
   }
 });
 
