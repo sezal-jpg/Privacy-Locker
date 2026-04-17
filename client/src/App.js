@@ -17,7 +17,7 @@ function App() {
   const signup = async () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!email || !password || email.trim() === "" || password.trim() === "") {
+    if (!email.trim() || !password.trim()) {
       alert("Email and password are required");
       return;
     }
@@ -27,70 +27,78 @@ function App() {
       return;
     }
 
-    if (password.trim().length < 6) {
+    if (password.length < 6) {
       alert("Password must be at least 6 characters");
       return;
     }
 
-    const res = await fetch(API + "/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: email.trim(),
-        password: password.trim(),
-      }),
-    });
+    try {
+      const res = await fetch(API + "/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password: password.trim() }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (!res.ok) {
-      alert(data.message);
-      return;
+      if (!res.ok) return alert(data.message);
+
+      alert("Signup successful!");
+    } catch (err) {
+      console.error(err);
+      alert("Signup failed");
     }
-
-    alert("Signup successful!");
   };
 
   const login = async () => {
-    if (!email || !password || email.trim() === "" || password.trim() === "") {
+    if (!email.trim() || !password.trim()) {
       alert("Enter email and password");
       return;
     }
 
-    const res = await fetch(API + "/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: email.trim(),
-        password: password.trim(),
-      }),
-    });
+    try {
+      const res = await fetch(API + "/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password: password.trim() }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (!res.ok || !data.token) {
-      alert(data.message || "Login failed");
-      return;
+      if (!res.ok || !data.token) {
+        return alert(data.message || "Login failed");
+      }
+
+      localStorage.setItem("token", data.token);
+      setToken(data.token);
+    } catch (err) {
+      console.error(err);
+      alert("Login error");
     }
-
-    localStorage.setItem("token", data.token);
-    setToken(data.token);
   };
 
   // ================= FILES =================
 
   const getFiles = async () => {
-    const res = await fetch(API + "/files", {
-      headers: { Authorization: token },
-    });
+    try {
+      const res = await fetch(API + "/files", {
+        headers: { Authorization: token },
+      });
 
-    const data = await res.json();
-    setFiles(data);
+      const data = await res.json();
+
+      // ✅ Prevent crash if backend sends wrong data
+      setFiles(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   useEffect(() => {
     if (token) getFiles();
   }, [token]);
+
+  // ================= UPLOAD =================
 
   const uploadFile = async () => {
     if (!file) return alert("Select a file");
@@ -98,18 +106,28 @@ function App() {
     const formData = new FormData();
     formData.append("file", file);
 
-    await fetch(API + "/upload", {
-      method: "POST",
-      headers: { Authorization: token },
-      body: formData,
-    });
+    try {
+      const res = await fetch(API + "/upload", {
+        method: "POST",
+        headers: { Authorization: token },
+        body: formData,
+      });
 
-    alert("Uploaded!");
-    getFiles();
+      const data = await res.json();
+
+      if (!res.ok) return alert(data.message || "Upload failed");
+
+      alert(data.message);
+
+      getFiles();
+    } catch (err) {
+      console.error(err);
+      alert("Upload error");
+    }
   };
 
-  const deleteFile = async (f) => {
-    await fetch(API + "/delete/" + f, {
+  const deleteFile = async (id) => {
+    await fetch(API + "/delete/" + id, {
       method: "DELETE",
       headers: { Authorization: token },
     });
@@ -117,8 +135,8 @@ function App() {
     getFiles();
   };
 
-  const viewFile = async (f) => {
-    const res = await fetch(API + "/view/" + f, {
+  const viewFile = async (id) => {
+    const res = await fetch(API + "/view/" + id, {
       headers: { Authorization: token },
     });
 
@@ -127,8 +145,8 @@ function App() {
     window.open(url);
   };
 
-  const downloadFile = async (f) => {
-    const res = await fetch(API + "/download/" + f, {
+  const downloadFile = async (id) => {
+    const res = await fetch(API + "/download/" + id, {
       headers: { Authorization: token },
     });
 
@@ -137,7 +155,7 @@ function App() {
 
     const a = document.createElement("a");
     a.href = url;
-    a.download = f;
+    a.download = "file";
     a.click();
   };
 
@@ -148,10 +166,7 @@ function App() {
       <div style={{ textAlign: "center", marginTop: "50px" }}>
         <h1>Privacy Locker 🔐</h1>
 
-        <input
-          placeholder="Email"
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        <input placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
         <br /><br />
 
         <input
@@ -193,21 +208,30 @@ function App() {
       <button onClick={uploadFile}>Upload</button>
 
       <h2>Your Files</h2>
+
       <ul>
-        {files.map((f, i) => (
-          <li key={i}>
-            {f}
-            <br />
+        {files.length === 0 ? (
+          <p>No files uploaded yet</p>
+        ) : (
+          files.map((f, i) => (
+            <li key={i}>
+              {f.originalName}
+              <br />
 
-            <button onClick={() => viewFile(f)}>View</button>
-            <br />
+              <button onClick={() => viewFile(f.public_id)}>View</button>
+              <br />
 
-            <button onClick={() => downloadFile(f)}>Download</button>
-            <br />
+              <button onClick={() => downloadFile(f.public_id)}>
+                Download
+              </button>
+              <br />
 
-            <button onClick={() => deleteFile(f)}>Delete</button>
-          </li>
-        ))}
+              <button onClick={() => deleteFile(f.public_id)}>
+                Delete
+              </button>
+            </li>
+          ))
+        )}
       </ul>
     </div>
   );
