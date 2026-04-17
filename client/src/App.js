@@ -1,6 +1,6 @@
-console.log("🔥 NEW FRONTEND LOADED");
-import React, { useState, useEffect } from "react";
 
+import React, { useState, useEffect } from "react";
+console.log("🔥 NEW FRONTEND LOADED");
 const API = process.env.REACT_APP_API_URL;
 
 function App() {
