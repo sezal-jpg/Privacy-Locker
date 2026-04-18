@@ -66,6 +66,17 @@ const fileCard = {
   border: "1px solid #eee"
 };
 
+// 🔄 SPINNER STYLE
+const spinner = {
+  width: "30px",
+  height: "30px",
+  border: "4px solid #ccc",
+  borderTop: "4px solid #4CAF50",
+  borderRadius: "50%",
+  animation: "spin 1s linear infinite",
+  margin: "10px auto"
+};
+
 // ================= APP =================
 
 function App() {
@@ -82,58 +93,54 @@ function App() {
   // ================= AUTH =================
 
   const signup = async () => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    setLoading("Signing up...");
+    try {
+      const res = await fetch(`${API}/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim(),
+          password: password.trim(),
+        }),
+      });
 
-    if (!email.trim() || !password.trim()) {
-      return alert("Email and password required");
+      const data = await res.json();
+
+      if (!res.ok) return alert(data.message);
+
+      alert("Signup successful!");
+    } catch {
+      alert("Signup failed");
+    } finally {
+      setLoading("");
     }
-
-    if (!emailRegex.test(email)) {
-      return alert("Invalid email");
-    }
-
-    if (password.length < 6) {
-      return alert("Password must be 6+ characters");
-    }
-
-    const res = await fetch(`${API}/signup`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: email.trim(),
-        password: password.trim(),
-      }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) return alert(data.message);
-
-    alert("Signup successful!");
   };
 
   const login = async () => {
-    if (!email.trim() || !password.trim()) {
-      return alert("Enter email and password");
+    setLoading("Logging in...");
+    try {
+      const res = await fetch(`${API}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim(),
+          password: password.trim(),
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.token) {
+        return alert(data.message || "Login failed");
+      }
+
+      localStorage.setItem("token", data.token);
+      setToken(data.token);
+    } catch {
+      alert("Login failed");
+    } finally {
+      setLoading("");
     }
-
-    const res = await fetch(`${API}/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: email.trim(),
-        password: password.trim(),
-      }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok || !data.token) {
-      return alert(data.message || "Login failed");
-    }
-
-    localStorage.setItem("token", data.token);
-    setToken(data.token);
   };
 
   const logout = () => {
@@ -189,7 +196,6 @@ function App() {
 
       getFiles();
     } catch (err) {
-      console.error(err);
       alert("Upload failed");
     } finally {
       setLoading("");
@@ -204,24 +210,18 @@ function App() {
     setLoading("Deleting...");
 
     try {
-      const url = `${API}/delete?id=${encodeURIComponent(id)}`;
-
-      const res = await fetch(url, {
+      const res = await fetch(`${API}/delete?id=${encodeURIComponent(id)}`, {
         method: "DELETE",
         headers: { Authorization: token },
       });
 
       const data = await res.json();
 
-      if (!res.ok) {
-        return alert(data.message || "Delete failed");
-      }
+      if (!res.ok) return alert(data.message);
 
       alert("Deleted successfully");
       getFiles();
-
-    } catch (err) {
-      console.error(err);
+    } catch {
       alert("Delete failed");
     } finally {
       setLoading("");
@@ -248,6 +248,13 @@ function App() {
         height: "100vh",
         background: "#f4f6f8"
       }}>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+
         <div style={{
           padding: 30,
           width: 320,
@@ -258,43 +265,38 @@ function App() {
         }}>
           <h2>🔐 Privacy Locker</h2>
 
-          <p style={{ fontSize: 12, color: "gray" }}>
-            Secure file storage with encryption
-          </p>
-
-          <input
-            placeholder="Email"
-            onChange={(e) => setEmail(e.target.value)}
-            style={inputStyle}
-          />
-
-          <input
-            type={showPassword ? "text" : "password"}
-            placeholder="Password"
-            onChange={(e) => setPassword(e.target.value)}
-            style={inputStyle}
-          />
+          <input placeholder="Email" onChange={(e) => setEmail(e.target.value)} style={inputStyle} />
+          <input type={showPassword ? "text" : "password"} placeholder="Password" onChange={(e) => setPassword(e.target.value)} style={inputStyle} />
 
           <button onClick={() => setShowPassword(!showPassword)} style={linkBtn}>
             {showPassword ? "Hide Password" : "Show Password"}
           </button>
 
-          <button onClick={signup} style={primaryBtn}>
-            Signup
-          </button>
+          <button onClick={signup} style={primaryBtn}>Signup</button>
+          <button onClick={login} style={secondaryBtn}>Login</button>
 
-          <button onClick={login} style={secondaryBtn}>
-            Login
-          </button>
+          {loading && (
+            <div>
+              <div style={spinner}></div>
+              <p>{loading}</p>
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
-  // ================= DASHBOARD UI =================
+  // ================= DASHBOARD =================
 
   return (
     <div style={{ padding: 30, background: "#f4f6f8", minHeight: "100vh" }}>
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
+
       <div style={{
         maxWidth: 600,
         margin: "auto",
@@ -305,27 +307,22 @@ function App() {
       }}>
 
         <h2 style={{ textAlign: "center" }}>Privacy Locker</h2>
-
         <p style={{ textAlign: "center", color: "gray" }}>
           🔐 Files are encrypted. Download to access.
         </p>
 
-        <button onClick={logout} style={logoutBtn}>
-          Logout
-        </button>
+        <button onClick={logout} style={logoutBtn}>Logout</button>
 
-        {loading && <p>{loading}</p>}
+        {loading && (
+          <div style={{ textAlign: "center" }}>
+            <div style={spinner}></div>
+            <p>{loading}</p>
+          </div>
+        )}
 
         <div style={{ marginTop: 20 }}>
-          <input
-            id="fileInput"
-            type="file"
-            onChange={(e) => setFile(e.target.files[0])}
-          />
-
-          <button onClick={uploadFile} style={primaryBtn}>
-            Upload
-          </button>
+          <input id="fileInput" type="file" onChange={(e) => setFile(e.target.files[0])} />
+          <button onClick={uploadFile} style={primaryBtn}>Upload</button>
         </div>
 
         <h3 style={{ marginTop: 20 }}>Your Files</h3>
@@ -339,17 +336,11 @@ function App() {
                 <b>{f.originalName}</b>
 
                 <div style={{ marginTop: 10 }}>
-                  <button
-                    onClick={() => downloadFile(f.url, f.originalName)}
-                    style={primaryBtn}
-                  >
+                  <button onClick={() => downloadFile(f.url, f.originalName)} style={primaryBtn}>
                     Download 🔐
                   </button>
 
-                  <button
-                    onClick={() => deleteFile(f.public_id, f.originalName)}
-                    style={dangerBtn}
-                  >
+                  <button onClick={() => deleteFile(f.public_id, f.originalName)} style={dangerBtn}>
                     Delete
                   </button>
                 </div>
