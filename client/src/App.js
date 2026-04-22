@@ -230,20 +230,36 @@ function App() {
 
   // ================= DOWNLOAD =================
 
-  const downloadFile = (url, name) => {
-  let fileName = name;
+  const downloadFile = async (url, name) => {
+  try {
+    let fileName = name;
 
-  // If extension missing → add .txt (encrypted file)
-  if (!fileName.includes(".")) {
-    fileName = fileName + ".txt";
+    // Ensure extension exists
+    if (!fileName.includes(".")) {
+      fileName += ".txt";
+    }
+
+    console.log("Downloading as:", fileName);
+
+    const res = await fetch(url);
+    const blob = await res.blob();
+
+    const blobUrl = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = fileName;
+
+    document.body.appendChild(a);
+    a.click();
+
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(blobUrl);
+
+  } catch (err) {
+    console.error("Download error:", err);
+    alert("Download failed");
   }
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = fileName;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
 };
 
   // ================= LOGIN UI =================
