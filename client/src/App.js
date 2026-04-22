@@ -234,12 +234,10 @@ function App() {
   try {
     let fileName = name;
 
-    // Ensure extension exists
-    if (!fileName.includes(".")) {
-      fileName += ".txt";
+    // 🔐 FORCE .txt for encrypted files
+    if (!fileName.endsWith(".txt")) {
+      fileName = fileName + ".txt";
     }
-
-    console.log("Downloading as:", fileName);
 
     const res = await fetch(url);
     const blob = await res.blob();
@@ -257,7 +255,6 @@ function App() {
     window.URL.revokeObjectURL(blobUrl);
 
   } catch (err) {
-    console.error("Download error:", err);
     alert("Download failed");
   }
 };
