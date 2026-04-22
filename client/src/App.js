@@ -231,11 +231,20 @@ function App() {
   // ================= DOWNLOAD =================
 
   const downloadFile = (url, name) => {
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = name;
-    a.click();
-  };
+  let fileName = name;
+
+  // If extension missing → add .txt (encrypted file)
+  if (!fileName.includes(".")) {
+    fileName = fileName + ".txt";
+  }
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+};
 
   // ================= LOGIN UI =================
 
