@@ -477,52 +477,52 @@ export default function App() {
       minHeight: "100vh",
       background:
         "radial-gradient(circle at top, #0f1724 0%, #05060a 70%)",
-      position: "relative",
       overflow: "hidden",
+      position: "relative",
       padding: 30,
       color: "#fff",
     }}
   >
     <GlobalStyles />
 
-    {/* Background Effects */}
+    {/* Floating Background Lights */}
     <div
       style={{
         position: "absolute",
-        top: -200,
-        left: -200,
         width: 500,
         height: 500,
         borderRadius: "50%",
         background:
           "radial-gradient(circle, rgba(201,168,76,0.08), transparent 70%)",
-        filter: "blur(40px)",
-      }}
-    />
-
-    <div
-      style={{
-        position: "absolute",
-        bottom: -200,
-        right: -200,
-        width: 500,
-        height: 500,
-        borderRadius: "50%",
-        background:
-          "radial-gradient(circle, rgba(80,120,255,0.08), transparent 70%)",
+        top: -200,
+        left: -150,
         filter: "blur(50px)",
       }}
     />
 
     <div
       style={{
-        maxWidth: 1200,
+        position: "absolute",
+        width: 500,
+        height: 500,
+        borderRadius: "50%",
+        background:
+          "radial-gradient(circle, rgba(90,120,255,0.08), transparent 70%)",
+        bottom: -200,
+        right: -150,
+        filter: "blur(50px)",
+      }}
+    />
+
+    <div
+      style={{
+        maxWidth: 1250,
         margin: "0 auto",
         position: "relative",
         zIndex: 2,
       }}
     >
-      {/* Top Bar */}
+      {/* Top Header */}
       <div
         style={{
           display: "flex",
@@ -534,10 +534,10 @@ export default function App() {
         <div>
           <h1
             style={{
-              fontSize: 34,
+              fontSize: 36,
               fontFamily: "'Cinzel', serif",
               color: "#f4deb3",
-              letterSpacing: 3,
+              letterSpacing: 4,
             }}
           >
             Privacy Locker
@@ -545,12 +545,12 @@ export default function App() {
 
           <p
             style={{
-              color: "rgba(255,255,255,0.4)",
+              color: "rgba(255,255,255,0.35)",
               marginTop: 8,
               letterSpacing: 1.5,
             }}
           >
-            Encrypted AI Vault System
+            Quantum Secure Vault
           </p>
         </div>
 
@@ -558,40 +558,43 @@ export default function App() {
           onClick={logout}
           style={{
             padding: "12px 24px",
-            background: "rgba(255,255,255,0.04)",
+            borderRadius: 16,
             border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 14,
+            background: "rgba(255,255,255,0.04)",
             color: "#fff",
             cursor: "pointer",
             backdropFilter: "blur(10px)",
-            transition: "0.3s",
           }}
         >
           Logout
         </button>
       </div>
 
-      {/* Stats */}
+      {/* Floating Stats */}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))",
-          gap: 20,
-          marginBottom: 35,
+          gridTemplateColumns:
+            "repeat(auto-fit,minmax(260px,1fr))",
+          gap: 22,
+          marginBottom: 40,
         }}
       >
         {[
           {
             title: "Encrypted Files",
             value: files.length,
+            icon: "🔒",
           },
           {
             title: "Vault Status",
-            value: "Secure",
+            value: "Protected",
+            icon: "🛡️",
           },
           {
             title: "Encryption",
             value: "AES Active",
+            icon: "⚡",
           },
         ].map((card, i) => (
           <div
@@ -599,15 +602,24 @@ export default function App() {
             style={{
               background: "rgba(255,255,255,0.04)",
               border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: 22,
+              borderRadius: 24,
               padding: 28,
-              backdropFilter: "blur(12px)",
+              backdropFilter: "blur(16px)",
               boxShadow: "0 8px 30px rgba(0,0,0,0.4)",
             }}
           >
+            <div
+              style={{
+                fontSize: 34,
+                marginBottom: 16,
+              }}
+            >
+              {card.icon}
+            </div>
+
             <p
               style={{
-                color: "rgba(255,255,255,0.45)",
+                color: "rgba(255,255,255,0.4)",
                 marginBottom: 10,
                 letterSpacing: 1,
               }}
@@ -617,8 +629,8 @@ export default function App() {
 
             <h2
               style={{
-                fontSize: 30,
                 color: "#f4deb3",
+                fontSize: 30,
               }}
             >
               {card.value}
@@ -627,35 +639,36 @@ export default function App() {
         ))}
       </div>
 
-      {/* Upload Zone */}
+      {/* Upload Section */}
       <div
         style={{
           background: "rgba(255,255,255,0.04)",
           border: "1px solid rgba(255,255,255,0.08)",
           borderRadius: 28,
           padding: 40,
-          backdropFilter: "blur(16px)",
-          marginBottom: 35,
+          backdropFilter: "blur(18px)",
+          marginBottom: 40,
           boxShadow: "0 10px 40px rgba(0,0,0,0.45)",
         }}
       >
         <h2
           style={{
-            marginBottom: 24,
+            fontSize: 26,
+            marginBottom: 28,
             color: "#f4deb3",
-            fontSize: 24,
           }}
         >
-          Upload Secure File
+          Secure Upload Gateway
         </h2>
 
+        {/* Upload Box */}
         <div
           onClick={() =>
             document.getElementById("fileInput").click()
           }
           style={{
             border: "2px dashed rgba(201,168,76,0.35)",
-            borderRadius: 20,
+            borderRadius: 24,
             padding: 60,
             textAlign: "center",
             cursor: "pointer",
@@ -673,7 +686,7 @@ export default function App() {
           <div
             style={{
               fontSize: 60,
-              marginBottom: 18,
+              marginBottom: 20,
             }}
           >
             🔐
@@ -683,7 +696,7 @@ export default function App() {
             <p
               style={{
                 color: "#f4deb3",
-                fontSize: 18,
+                fontSize: 20,
               }}
             >
               {file.name}
@@ -692,25 +705,26 @@ export default function App() {
             <>
               <p
                 style={{
-                  fontSize: 18,
+                  fontSize: 20,
                   color: "#fff",
                 }}
               >
-                Drag & Drop Secure File
+                Drop Secure File Here
               </p>
 
               <p
                 style={{
-                  color: "rgba(255,255,255,0.35)",
                   marginTop: 10,
+                  color: "rgba(255,255,255,0.35)",
                 }}
               >
-                AES encryption will be applied automatically
+                AES encryption applied automatically
               </p>
             </>
           )}
         </div>
 
+        {/* Upload Button */}
         <div style={{ marginTop: 24 }}>
           {loading ? (
             <Spinner label={loading} />
@@ -720,7 +734,7 @@ export default function App() {
               style={{
                 width: "100%",
                 padding: "16px 0",
-                borderRadius: 16,
+                borderRadius: 18,
                 border: "none",
                 background:
                   "linear-gradient(135deg,#d8b55b,#a87c2a)",
@@ -736,13 +750,13 @@ export default function App() {
         </div>
       </div>
 
-      {/* Files */}
+      {/* File Cards */}
       <div>
         <h2
           style={{
-            marginBottom: 22,
+            marginBottom: 24,
+            fontSize: 26,
             color: "#f4deb3",
-            fontSize: 24,
           }}
         >
           Encrypted Vault Files
@@ -751,22 +765,22 @@ export default function App() {
         {files.length === 0 ? (
           <div
             style={{
-              background: "rgba(255,255,255,0.03)",
-              borderRadius: 22,
               padding: 50,
+              borderRadius: 24,
               textAlign: "center",
+              background: "rgba(255,255,255,0.03)",
               color: "rgba(255,255,255,0.35)",
             }}
           >
-            No files uploaded
+            No encrypted files stored
           </div>
         ) : (
           <div
             style={{
               display: "grid",
               gridTemplateColumns:
-                "repeat(auto-fit,minmax(300px,1fr))",
-              gap: 22,
+                "repeat(auto-fit,minmax(320px,1fr))",
+              gap: 24,
             }}
           >
             {files.map((f, i) => (
@@ -775,16 +789,16 @@ export default function App() {
                 style={{
                   background: "rgba(255,255,255,0.04)",
                   border: "1px solid rgba(255,255,255,0.08)",
-                  borderRadius: 22,
-                  padding: 24,
-                  backdropFilter: "blur(14px)",
+                  borderRadius: 24,
+                  padding: 28,
+                  backdropFilter: "blur(16px)",
                   transition: "0.3s",
                 }}
               >
                 <div
                   style={{
-                    fontSize: 42,
-                    marginBottom: 16,
+                    fontSize: 46,
+                    marginBottom: 18,
                   }}
                 >
                   🔒
@@ -793,7 +807,7 @@ export default function App() {
                 <h3
                   style={{
                     color: "#fff",
-                    marginBottom: 10,
+                    marginBottom: 12,
                     wordBreak: "break-word",
                   }}
                 >
@@ -803,10 +817,10 @@ export default function App() {
                 <p
                   style={{
                     color: "rgba(255,255,255,0.4)",
-                    marginBottom: 22,
+                    marginBottom: 24,
                   }}
                 >
-                  AES Encrypted • Secure Storage
+                  AES Encrypted • Cloud Protected
                 </p>
 
                 <div
@@ -822,7 +836,7 @@ export default function App() {
                     style={{
                       flex: 1,
                       padding: "12px 0",
-                      borderRadius: 12,
+                      borderRadius: 14,
                       border: "none",
                       background:
                         "rgba(201,168,76,0.15)",
@@ -843,7 +857,7 @@ export default function App() {
                     style={{
                       flex: 1,
                       padding: "12px 0",
-                      borderRadius: 12,
+                      borderRadius: 14,
                       border: "none",
                       background:
                         "rgba(255,80,80,0.12)",
