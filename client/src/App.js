@@ -472,146 +472,394 @@ export default function App() {
 
   // ===== DASHBOARD =====
   return (
-    <div style={{
+  <div
+    style={{
       minHeight: "100vh",
-      background: "#07080d",
+      background:
+        "radial-gradient(circle at top, #0f1724 0%, #05060a 70%)",
+      position: "relative",
+      overflow: "hidden",
       padding: 30,
       color: "#fff",
-    }}>
-      <GlobalStyles />
+    }}
+  >
+    <GlobalStyles />
 
-      <div style={{
-        maxWidth: 700,
+    {/* Background Effects */}
+    <div
+      style={{
+        position: "absolute",
+        top: -200,
+        left: -200,
+        width: 500,
+        height: 500,
+        borderRadius: "50%",
+        background:
+          "radial-gradient(circle, rgba(201,168,76,0.08), transparent 70%)",
+        filter: "blur(40px)",
+      }}
+    />
+
+    <div
+      style={{
+        position: "absolute",
+        bottom: -200,
+        right: -200,
+        width: 500,
+        height: 500,
+        borderRadius: "50%",
+        background:
+          "radial-gradient(circle, rgba(80,120,255,0.08), transparent 70%)",
+        filter: "blur(50px)",
+      }}
+    />
+
+    <div
+      style={{
+        maxWidth: 1200,
         margin: "0 auto",
-      }}>
-        <div style={{
+        position: "relative",
+        zIndex: 2,
+      }}
+    >
+      {/* Top Bar */}
+      <div
+        style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          marginBottom: 30,
-        }}>
-          <h1 style={{
-            color: "#c9a84c",
-            fontFamily: "'Cinzel', serif",
-          }}>
+          marginBottom: 40,
+        }}
+      >
+        <div>
+          <h1
+            style={{
+              fontSize: 34,
+              fontFamily: "'Cinzel', serif",
+              color: "#f4deb3",
+              letterSpacing: 3,
+            }}
+          >
             Privacy Locker
           </h1>
 
-          <button
-            onClick={logout}
+          <p
             style={{
-              background: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              padding: "10px 18px",
-              borderRadius: 10,
-              color: "#fff",
-              cursor: "pointer",
+              color: "rgba(255,255,255,0.4)",
+              marginTop: 8,
+              letterSpacing: 1.5,
             }}
           >
-            Logout
-          </button>
+            Encrypted AI Vault System
+          </p>
         </div>
 
-        {/* Upload */}
-        <div style={{
-          background: "rgba(255,255,255,0.03)",
+        <button
+          onClick={logout}
+          style={{
+            padding: "12px 24px",
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 14,
+            color: "#fff",
+            cursor: "pointer",
+            backdropFilter: "blur(10px)",
+            transition: "0.3s",
+          }}
+        >
+          Logout
+        </button>
+      </div>
+
+      {/* Stats */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))",
+          gap: 20,
+          marginBottom: 35,
+        }}
+      >
+        {[
+          {
+            title: "Encrypted Files",
+            value: files.length,
+          },
+          {
+            title: "Vault Status",
+            value: "Secure",
+          },
+          {
+            title: "Encryption",
+            value: "AES Active",
+          },
+        ].map((card, i) => (
+          <div
+            key={i}
+            style={{
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 22,
+              padding: 28,
+              backdropFilter: "blur(12px)",
+              boxShadow: "0 8px 30px rgba(0,0,0,0.4)",
+            }}
+          >
+            <p
+              style={{
+                color: "rgba(255,255,255,0.45)",
+                marginBottom: 10,
+                letterSpacing: 1,
+              }}
+            >
+              {card.title}
+            </p>
+
+            <h2
+              style={{
+                fontSize: 30,
+                color: "#f4deb3",
+              }}
+            >
+              {card.value}
+            </h2>
+          </div>
+        ))}
+      </div>
+
+      {/* Upload Zone */}
+      <div
+        style={{
+          background: "rgba(255,255,255,0.04)",
           border: "1px solid rgba(255,255,255,0.08)",
-          padding: 24,
-          borderRadius: 20,
-          marginBottom: 24,
-        }}>
+          borderRadius: 28,
+          padding: 40,
+          backdropFilter: "blur(16px)",
+          marginBottom: 35,
+          boxShadow: "0 10px 40px rgba(0,0,0,0.45)",
+        }}
+      >
+        <h2
+          style={{
+            marginBottom: 24,
+            color: "#f4deb3",
+            fontSize: 24,
+          }}
+        >
+          Upload Secure File
+        </h2>
+
+        <div
+          onClick={() =>
+            document.getElementById("fileInput").click()
+          }
+          style={{
+            border: "2px dashed rgba(201,168,76,0.35)",
+            borderRadius: 20,
+            padding: 60,
+            textAlign: "center",
+            cursor: "pointer",
+            background: "rgba(201,168,76,0.03)",
+            transition: "0.3s",
+          }}
+        >
           <input
             id="fileInput"
             type="file"
+            style={{ display: "none" }}
             onChange={(e) => setFile(e.target.files[0])}
           />
 
-          <button
-            onClick={uploadFile}
+          <div
             style={{
-              marginTop: 14,
-              width: "100%",
-              padding: "12px 0",
-              background: "linear-gradient(135deg,#c9a84c,#a87c2a)",
-              border: "none",
-              borderRadius: 10,
-              fontWeight: 700,
-              cursor: "pointer",
+              fontSize: 60,
+              marginBottom: 18,
             }}
           >
-            Encrypt & Upload
-          </button>
-        </div>
+            🔐
+          </div>
 
-        {/* Files */}
-        <div style={{
-          background: "rgba(255,255,255,0.03)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          padding: 24,
-          borderRadius: 20,
-        }}>
-          <h2 style={{
-            marginBottom: 20,
-            color: "#c9a84c",
-          }}>
-            Vault Files
-          </h2>
-
-          {files.length === 0 ? (
-            <p style={{ opacity: 0.5 }}>No files uploaded</p>
+          {file ? (
+            <p
+              style={{
+                color: "#f4deb3",
+                fontSize: 18,
+              }}
+            >
+              {file.name}
+            </p>
           ) : (
-            files.map((f, i) => (
-              <div
-                key={i}
-                className="file-row"
+            <>
+              <p
                 style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  padding: 14,
-                  marginBottom: 12,
-                  background: "rgba(255,255,255,0.03)",
-                  borderRadius: 12,
+                  fontSize: 18,
+                  color: "#fff",
                 }}
               >
-                <span>{f.originalName}</span>
+                Drag & Drop Secure File
+              </p>
 
-                <div style={{ display: "flex", gap: 10 }}>
+              <p
+                style={{
+                  color: "rgba(255,255,255,0.35)",
+                  marginTop: 10,
+                }}
+              >
+                AES encryption will be applied automatically
+              </p>
+            </>
+          )}
+        </div>
+
+        <div style={{ marginTop: 24 }}>
+          {loading ? (
+            <Spinner label={loading} />
+          ) : (
+            <button
+              onClick={uploadFile}
+              style={{
+                width: "100%",
+                padding: "16px 0",
+                borderRadius: 16,
+                border: "none",
+                background:
+                  "linear-gradient(135deg,#d8b55b,#a87c2a)",
+                color: "#05060a",
+                fontWeight: 700,
+                fontSize: 16,
+                cursor: "pointer",
+              }}
+            >
+              Encrypt & Upload
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Files */}
+      <div>
+        <h2
+          style={{
+            marginBottom: 22,
+            color: "#f4deb3",
+            fontSize: 24,
+          }}
+        >
+          Encrypted Vault Files
+        </h2>
+
+        {files.length === 0 ? (
+          <div
+            style={{
+              background: "rgba(255,255,255,0.03)",
+              borderRadius: 22,
+              padding: 50,
+              textAlign: "center",
+              color: "rgba(255,255,255,0.35)",
+            }}
+          >
+            No files uploaded
+          </div>
+        ) : (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns:
+                "repeat(auto-fit,minmax(300px,1fr))",
+              gap: 22,
+            }}
+          >
+            {files.map((f, i) => (
+              <div
+                key={i}
+                style={{
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: 22,
+                  padding: 24,
+                  backdropFilter: "blur(14px)",
+                  transition: "0.3s",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 42,
+                    marginBottom: 16,
+                  }}
+                >
+                  🔒
+                </div>
+
+                <h3
+                  style={{
+                    color: "#fff",
+                    marginBottom: 10,
+                    wordBreak: "break-word",
+                  }}
+                >
+                  {f.originalName}
+                </h3>
+
+                <p
+                  style={{
+                    color: "rgba(255,255,255,0.4)",
+                    marginBottom: 22,
+                  }}
+                >
+                  AES Encrypted • Secure Storage
+                </p>
+
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 12,
+                  }}
+                >
                   <button
-                    onClick={() => downloadFile(f.url, f.originalName)}
+                    onClick={() =>
+                      downloadFile(f.url, f.originalName)
+                    }
                     style={{
-                      background: "rgba(201,168,76,0.12)",
-                      border: "1px solid rgba(201,168,76,0.2)",
-                      color: "#c9a84c",
-                      padding: "8px 14px",
-                      borderRadius: 8,
+                      flex: 1,
+                      padding: "12px 0",
+                      borderRadius: 12,
+                      border: "none",
+                      background:
+                        "rgba(201,168,76,0.15)",
+                      color: "#f4deb3",
                       cursor: "pointer",
                     }}
                   >
-                    <DownloadIcon />
+                    Download
                   </button>
 
                   <button
                     onClick={() =>
-                      deleteFile(f.public_id, f.originalName)
+                      deleteFile(
+                        f.public_id,
+                        f.originalName
+                      )
                     }
                     style={{
-                      background: "rgba(255,70,50,0.08)",
-                      border: "1px solid rgba(255,70,50,0.2)",
-                      color: "#ff7050",
-                      padding: "8px 14px",
-                      borderRadius: 8,
+                      flex: 1,
+                      padding: "12px 0",
+                      borderRadius: 12,
+                      border: "none",
+                      background:
+                        "rgba(255,80,80,0.12)",
+                      color: "#ff8080",
                       cursor: "pointer",
                     }}
                   >
-                    <TrashIcon />
+                    Delete
                   </button>
                 </div>
               </div>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
-  );
+  </div>
+);
 }
