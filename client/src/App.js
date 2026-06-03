@@ -309,47 +309,194 @@ export default function App() {
         />
 
         {/* Auth Card */}
-        {showAuth && (
-          <div
-            className="vault-card"
-            style={{
-              width: 420,
-              padding: "42px 38px",
-              borderRadius: 24,
-              background: "rgba(15,18,28,0.88)",
-              backdropFilter: "blur(16px)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              boxShadow: "0 20px 80px rgba(0,0,0,0.65)",
-              color: "#fff",
-              position: "absolute",
-              animation: "authAppear 0.4s ease",
-              zIndex: 3,
-            }}
-          >
-            <div style={{ textAlign: "center", marginBottom: 28 }}>
-              <div style={{ color: "#c9a84c", marginBottom: 10 }}>
-                <LockIcon size={32} />
-              </div>
+{showAuth && (
+  <div
+    className="vault-card"
+    style={{
+      width: 420,
+      padding: "42px 38px",
+      borderRadius: 24,
+      background: "rgba(15,18,28,0.88)",
+      backdropFilter: "blur(16px)",
+      border: "1px solid rgba(255,255,255,0.08)",
+      boxShadow: "0 20px 80px rgba(0,0,0,0.65)",
+      color: "#fff",
+      position: "absolute",
+      animation: "authAppear 0.4s ease",
+      zIndex: 3,
+      position: "relative",
+    }}
+  >
+    {/* Close Button */}
+    <button
+      onClick={() => setShowAuth(false)}
+      style={{
+        position: "absolute",
+        top: 16,
+        right: 16,
+        width: 34,
+        height: 34,
+        borderRadius: "50%",
+        border: "1px solid rgba(255,255,255,0.08)",
+        background: "rgba(255,255,255,0.04)",
+        color: "#fff",
+        cursor: "pointer",
+        fontSize: 18,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backdropFilter: "blur(10px)",
+      }}
+    >
+      ✕
+    </button>
 
-              <h1 style={{
-                fontFamily: "'Cinzel', serif",
-                fontSize: 24,
-                color: "#f4deb3",
-                letterSpacing: 3,
-              }}>
-                Privacy Locker
-              </h1>
+    <div style={{ textAlign: "center", marginBottom: 28 }}>
+      <div style={{ color: "#c9a84c", marginBottom: 10 }}>
+        <LockIcon size={32} />
+      </div>
 
-              <p style={{
-                color: "rgba(255,255,255,0.4)",
-                marginTop: 8,
-                fontSize: 12,
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
-              }}>
-                Secure Encrypted Vault
-              </p>
-            </div>
+      <h1
+        style={{
+          fontFamily: "'Cinzel', serif",
+          fontSize: 24,
+          color: "#f4deb3",
+          letterSpacing: 3,
+        }}
+      >
+        Privacy Locker
+      </h1>
+
+      <p
+        style={{
+          color: "rgba(255,255,255,0.4)",
+          marginTop: 8,
+          fontSize: 12,
+          letterSpacing: 1.5,
+          textTransform: "uppercase",
+        }}
+      >
+        Secure Encrypted Vault
+      </p>
+    </div>
+
+    {/* Tabs */}
+    <div
+      style={{
+        display: "flex",
+        marginBottom: 24,
+        borderBottom: "1px solid rgba(255,255,255,0.08)",
+      }}
+    >
+      {["login", "signup"].map((tab) => (
+        <button
+          key={tab}
+          onClick={() => setActiveTab(tab)}
+          style={{
+            flex: 1,
+            padding: "12px 0",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            color:
+              activeTab === tab
+                ? "#c9a84c"
+                : "rgba(255,255,255,0.35)",
+            borderBottom:
+              activeTab === tab
+                ? "2px solid #c9a84c"
+                : "2px solid transparent",
+            fontWeight: 600,
+            letterSpacing: 1.5,
+            textTransform: "uppercase",
+          }}
+        >
+          {tab === "login" ? "Sign In" : "Register"}
+        </button>
+      ))}
+    </div>
+
+    {/* Inputs */}
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <input
+        type="email"
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        className="input-field"
+        style={{
+          padding: "14px",
+          borderRadius: 10,
+          border: "1px solid rgba(255,255,255,0.1)",
+          background: "rgba(255,255,255,0.04)",
+          color: "#fff",
+        }}
+      />
+
+      <div style={{ position: "relative" }}>
+        <input
+          type={showPassword ? "text" : "password"}
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="input-field"
+          style={{
+            width: "100%",
+            padding: "14px 42px 14px 14px",
+            borderRadius: 10,
+            border: "1px solid rgba(255,255,255,0.1)",
+            background: "rgba(255,255,255,0.04)",
+            color: "#fff",
+          }}
+        />
+
+        <button
+          onClick={() => setShowPassword(!showPassword)}
+          style={{
+            position: "absolute",
+            right: 12,
+            top: "50%",
+            transform: "translateY(-50%)",
+            background: "none",
+            border: "none",
+            color: "#fff",
+            cursor: "pointer",
+          }}
+        >
+          <EyeIcon open={showPassword} />
+        </button>
+      </div>
+    </div>
+
+    <div style={{ marginTop: 24 }}>
+      {loading ? (
+        <Spinner label={loading} />
+      ) : (
+        <button
+          className="gold-btn"
+          onClick={activeTab === "login" ? login : signup}
+          style={{
+            width: "100%",
+            padding: "14px 0",
+            borderRadius: 10,
+            border: "none",
+            background:
+              "linear-gradient(135deg, #d8b55b, #a87c2a)",
+            color: "#07080d",
+            fontWeight: 700,
+            letterSpacing: 2,
+            textTransform: "uppercase",
+            cursor: "pointer",
+          }}
+        >
+          {activeTab === "login"
+            ? "Unlock Vault"
+            : "Create Vault"}
+        </button>
+      )}
+    </div>
+  </div>
+)}
 
             {/* Tabs */}
             <div style={{
