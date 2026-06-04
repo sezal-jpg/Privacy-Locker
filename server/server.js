@@ -6,11 +6,17 @@ const CryptoJS = require("crypto-js");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const cloudinary = require("cloudinary").v2;
+const {
+  OAuth2Client,
+} = require("google-auth-library");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = "jwtsecret";
-
+const client =
+  new OAuth2Client(
+    process.env.GOOGLE_CLIENT_ID
+  );
 app.use(cors());
 app.use(express.json());
 
@@ -62,21 +68,63 @@ app.post("/signup", async (req, res) => {
 });
 
 // ================== LOGIN ==================
-app.post("/login", async (req, res) => {
-  let { email, password } = req.body;
+app.post(
+  "/google-login",
+  async (req, res) => {
+    try {
+      const { credential } =
+        req.body;
 
-  email = email?.trim();
-  password = password?.trim();
+      const ticket =
+        await client.verifyIdToken({
+          idToken: credential,
+          audience:
+            process.env
+              .GOOGLE_CLIENT_ID,
+        });
 
-  const user = users.find((u) => u.email === email);
-  if (!user) return res.status(400).json({ message: "User not found" });
+      const payload =
+        ticket.getPayload();
 
-  const match = await bcrypt.compare(password, user.password);
-  if (!match) return res.status(400).json({ message: "Invalid password" });
+      const email =
+        payload.email;
 
-  const token = jwt.sign({ email }, JWT_SECRET);
-  res.json({ token });
-});
+      let user = users.find(
+        (u) => u.email === email
+      );
+
+      if (!user) {
+        const hashed =
+          await bcrypt.hash(
+            Math.random().toString(),
+            10
+          );
+
+        user = {
+          email,
+          password: hashed,
+        };
+
+        users.push(user);
+      }
+
+      const token = jwt.sign(
+        { email },
+        JWT_SECRET
+      );
+
+      res.json({ token });
+
+    } catch (err) {
+      console.error(err);
+
+      res.status(401).json({
+        message:
+          "Invalid Google login",
+      });
+    }
+  }
+);
 
 // ================== UPLOAD ==================
 app.post("/upload", authMiddleware, upload.single("file"), async (req, res) => {

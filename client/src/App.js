@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-
+import { GoogleLogin } from "@react-oauth/google";
 const API = process.env.REACT_APP_API_URL;
 
 // ===== GLOBAL STYLES =====
@@ -166,41 +166,69 @@ export default function App() {
   };
 
   const login = async () => {
-    setLoading("Unlocking vault...");
+  setLoading("Unlocking vault...");
 
-    try {
-      const res = await fetch(`${API}/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
-      });
+  try {
+    const res = await fetch(`${API}/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        password,
+      }),
+    });
 
-      const data = await res.json();
+    const data = await res.json();
 
-      if (!res.ok || !data.token) {
-        alert("Login failed");
-        return;
-      }
-
-      localStorage.setItem("token", data.token);
-      setToken(data.token);
-    } catch {
-      alert("Login failed");
-    } finally {
-      setLoading("");
+    if (!res.ok || !data.token) {
+      alert(data.message || "Login failed");
+      return;
     }
-  };
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    setToken(null);
-    setFiles([]);
-  };
+    localStorage.setItem("token", data.token);
+    setToken(data.token);
+
+  } catch {
+    alert("Login failed");
+  } finally {
+    setLoading("");
+  }
+};
+
+const handleGoogleLogin = async (response) => {
+  try {
+    const res = await fetch(`${API}/google-login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        credential: response.credential,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!data.token) {
+      alert("Google login failed");
+      return;
+    }
+
+    localStorage.setItem("token", data.token);
+    setToken(data.token);
+
+  } catch {
+    alert("Google login failed");
+  }
+};
+
+const logout = () => {
+  localStorage.removeItem("token");
+  setToken(null);
+  setFiles([]);
+};
 
   // ===== FILES =====
   const getFiles = async () => {
@@ -553,47 +581,75 @@ export default function App() {
               </div>
             </div>
 
-            {/* Submit */}
-            <div
-              style={{
-                marginTop: 24,
-              }}
-            >
-              {loading ? (
-                <Spinner label={loading} />
-              ) : (
-                <button
-                  className="gold-btn"
-                  onClick={
-                    activeTab === "login"
-                      ? login
-                      : signup
-                  }
-                  style={{
-                    width: "100%",
-                    padding: "14px 0",
-                    borderRadius: 10,
-                    border: "none",
-                    background:
-                      "linear-gradient(135deg, #d8b55b, #a87c2a)",
-                    color: "#07080d",
-                    fontWeight: 700,
-                    letterSpacing: 2,
-                    textTransform: "uppercase",
-                    cursor: "pointer",
-                  }}
-                >
-                  {activeTab === "login"
-                    ? "Unlock Vault"
-                    : "Create Vault"}
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
+   {/* Submit */}
+<div
+  style={{
+    marginTop: 24,
+  }}
+>
+  {loading ? (
+    <Spinner label={loading} />
+  ) : (
+    <button
+      className="gold-btn"
+      onClick={
+        activeTab === "login"
+          ? login
+          : signup
+      }
+      style={{
+        width: "100%",
+        padding: "14px 0",
+        borderRadius: 10,
+        border: "none",
+        background:
+          "linear-gradient(135deg, #d8b55b, #a87c2a)",
+        color: "#07080d",
+        fontWeight: 700,
+        letterSpacing: 2,
+        textTransform: "uppercase",
+        cursor: "pointer",
+      }}
+    >
+      {activeTab === "login"
+        ? "Unlock Vault"
+        : "Create Vault"}
+    </button>
+  )}
+</div>
+
+{/* OR Divider */}
+<div
+  style={{
+    marginTop: 20,
+    textAlign: "center",
+    color: "rgba(255,255,255,0.4)",
+  }}
+>
+  ───── OR ─────
+</div>
+
+{/* Google Login */}
+<div
+  style={{
+    marginTop: 20,
+    display: "flex",
+    justifyContent: "center",
+  }}
+>
+  <GoogleLogin
+    onSuccess={handleGoogleLogin}
+    onError={() => alert("Google Login Failed")}
+  />
+</div>
+</div>
+
+)}
+
+</div>
+
+);
+}
 
   // ===== DASHBOARD =====
   return (
