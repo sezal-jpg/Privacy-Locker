@@ -66,65 +66,84 @@ app.post("/signup", async (req, res) => {
 
   res.json({ message: "Signup successful" });
 });
-
 // ================== LOGIN ==================
-app.post(
-  "/google-login",
-  async (req, res) => {
-    try {
-      const { credential } =
-        req.body;
+app.post("/login", async (req, res) => {
+  let { email, password } = req.body;
 
-      const ticket =
-        await client.verifyIdToken({
-          idToken: credential,
-          audience:
-            process.env
-              .GOOGLE_CLIENT_ID,
-        });
+  email = email?.trim();
+  password = password?.trim();
 
-      const payload =
-        ticket.getPayload();
+  const user = users.find((u) => u.email === email);
 
-      const email =
-        payload.email;
-
-      let user = users.find(
-        (u) => u.email === email
-      );
-
-      if (!user) {
-        const hashed =
-          await bcrypt.hash(
-            Math.random().toString(),
-            10
-          );
-
-        user = {
-          email,
-          password: hashed,
-        };
-
-        users.push(user);
-      }
-
-      const token = jwt.sign(
-        { email },
-        JWT_SECRET
-      );
-
-      res.json({ token });
-
-    } catch (err) {
-      console.error(err);
-
-      res.status(401).json({
-        message:
-          "Invalid Google login",
-      });
-    }
+  if (!user) {
+    return res.status(400).json({
+      message: "User not found",
+    });
   }
-);
+
+  const match = await bcrypt.compare(
+    password,
+    user.password
+  );
+
+  if (!match) {
+    return res.status(400).json({
+      message: "Invalid password",
+    });
+  }
+
+  const token = jwt.sign(
+    { email },
+    JWT_SECRET
+  );
+
+
+  res.json({ token });
+});
+// ================== GOOGLE LOGIN ==================
+app.post("/google-login", async (req, res) => {
+  try {
+    const { credential } = req.body;
+
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const email = payload.email;
+
+    let user = users.find((u) => u.email === email);
+
+    if (!user) {
+      const hashed = await bcrypt.hash(
+        Math.random().toString(),
+        10
+      );
+
+      user = {
+        email,
+        password: hashed,
+      };
+
+      users.push(user);
+    }
+
+    const token = jwt.sign(
+      { email },
+      JWT_SECRET
+    );
+
+    res.json({ token });
+
+  } catch (err) {
+    console.error(err);
+
+    res.status(401).json({
+      message: "Invalid Google login",
+    });
+  }
+});
 
 // ================== UPLOAD ==================
 app.post("/upload", authMiddleware, upload.single("file"), async (req, res) => {
