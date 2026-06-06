@@ -1,4 +1,7 @@
 require("dotenv").config();
+const User = require("./models/User");
+const File = require("./models/File");
+const mongoose = require("mongoose");
 const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
@@ -19,7 +22,15 @@ const client =
   );
 app.use(cors());
 app.use(express.json());
-
+console.log("URI =", process.env.MONGODB_URI);
+mongoose
+  .connect(process.env.MONGODB_URI)
+  .then(() => {
+    console.log("✅ MongoDB Connected");
+  })
+  .catch((err) => {
+    console.error("❌ MongoDB Error:", err);
+  });
 // ================== CLOUDINARY ==================
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
