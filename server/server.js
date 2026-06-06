@@ -68,6 +68,7 @@ app.post("/signup", async (req, res) => {
 });
 // ================== LOGIN ==================
 app.post("/login", async (req, res) => {
+  console.log("LOGIN ROUTE VERSION 777");
   let { email, password } = req.body;
 
   email = email?.trim();
