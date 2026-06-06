@@ -38,10 +38,6 @@ cloudinary.config({
   api_secret: process.env.CLOUD_API_SECRET,
 });
 
-// ================== TEMP STORAGE ==================
-let users = [];
-let files = [];
-
 // ================== AUTH ==================
 const authMiddleware = (req, res, next) => {
   const token = req.headers.authorization;
@@ -69,11 +65,22 @@ app.post("/signup", async (req, res) => {
   if (!email || !password)
     return res.status(400).json({ message: "Email & password required" });
 
-  if (users.find((u) => u.email === email))
+
+ const existingUser = await User.findOne({
+  email,
+});
+
+if (existingUser)
+  return res.status(400).json({
+    message: "User already exists",
+  });
     return res.status(400).json({ message: "User already exists" });
 
   const hashed = await bcrypt.hash(password, 10);
-  users.push({ email, password: hashed });
+  await User.create({
+  email,
+  password: hashed,
+});
 
   res.json({ message: "Signup successful" });
 });
@@ -90,7 +97,9 @@ app.post("/login", async (req, res) => {
   email = email?.trim();
   password = password?.trim();
 
-  const user = users.find((u) => u.email === email);
+const user = await User.findOne({
+  email,
+});
 
   console.log("FOUND USER:", user);
 
@@ -137,7 +146,9 @@ app.post("/google-login", async (req, res) => {
     const payload = ticket.getPayload();
     const email = payload.email;
 
-    let user = users.find((u) => u.email === email);
+    let user = await User.findOne({
+  email,
+});
 
     if (!user) {
       const hashed = await bcrypt.hash(
@@ -145,12 +156,10 @@ app.post("/google-login", async (req, res) => {
         10
       );
 
-      user = {
-        email,
-        password: hashed,
-      };
-
-      users.push(user);
+      user = await User.create({
+  email,
+  password: hashed,
+});
     }
 
     const token = jwt.sign(
@@ -172,7 +181,9 @@ app.post("/google-login", async (req, res) => {
 // ================== UPLOAD ==================
 app.post("/upload", authMiddleware, upload.single("file"), async (req, res) => {
   try {
-    const user = users.find((u) => u.email === req.user);
+    const user = await User.findOne({
+  email: req.user,
+});
 
     const encrypted = CryptoJS.AES.encrypt(
       req.file.buffer.toString("base64"),
@@ -187,12 +198,13 @@ app.post("/upload", authMiddleware, upload.single("file"), async (req, res) => {
       }
     );
 
-    files.push({
-      user: req.user,
-      public_id: result.public_id,
-      url: result.secure_url, // 🔥 IMPORTANT
-      originalName: req.file.originalname,
-    });
+    await File.create({
+  user: req.user,
+  public_id: result.public_id,
+  url: result.secure_url,
+  originalName:
+    req.file.originalname,
+});
 
     res.json({ message: "File uploaded successfully" });
 
@@ -203,9 +215,18 @@ app.post("/upload", authMiddleware, upload.single("file"), async (req, res) => {
 });
 
 // ================== FILE LIST ==================
-app.get("/files", authMiddleware, (req, res) => {
-  const userFiles = files.filter((f) => f.user === req.user);
-  res.json(userFiles);
+app.get("/files", authMiddleware, async (req, res) => {
+  try {
+    const userFiles = await File.find({
+      user: req.user,
+    });
+
+    res.json(userFiles);
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to fetch files",
+    });
+  }
 });
 
 // ================== DELETE ==================
@@ -223,9 +244,10 @@ app.delete("/delete", authMiddleware, async (req, res) => {
       });
     }
 
-    files = files.filter(
-      (f) => !(f.public_id === id && f.user === req.user)
-    );
+    await File.deleteOne({
+  public_id: id,
+  user: req.user,
+});
 
     res.json({ message: "Deleted successfully" });
 
