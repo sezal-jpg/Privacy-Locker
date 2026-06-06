@@ -1,4 +1,6 @@
+console.log("SERVER FILE LOADED - VERSION 999");
 require("dotenv").config();
+
 const User = require("./models/User");
 const File = require("./models/File");
 const mongoose = require("mongoose");
@@ -25,8 +27,11 @@ app.use(express.json());
 console.log("URI =", process.env.MONGODB_URI);
 mongoose
   .connect(process.env.MONGODB_URI)
-  .then(() => {
+  .then(async () => {
     console.log("✅ MongoDB Connected");
+
+    const users = await User.find();
+    console.log("ALL USERS:", users);
   })
   .catch((err) => {
     console.error("❌ MongoDB Error:", err);
@@ -57,6 +62,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 // ================== SIGNUP ==================
 app.post("/signup", async (req, res) => {
+   console.log("SIGNUP ROUTE HIT");
   try {
     let { email, password } = req.body;
 
@@ -72,11 +78,13 @@ app.post("/signup", async (req, res) => {
     }
 
     const hashed = await bcrypt.hash(password, 10);
+console.log("Creating user...");
+    const newUser = await User.create({
+  email,
+  password: hashed,
+});
 
-    await User.create({
-      email,
-      password: hashed,
-    });
+console.log("User created:", newUser);
 
     res.json({
       message: "Signup successful",
@@ -261,6 +269,13 @@ app.delete("/delete", authMiddleware, async (req, res) => {
   }
 });
 
+// ===== TEST ROUTE =====
+app.get("/test-users", async (req, res) => {
+  const users = await User.find();
+  res.json(users);
+});
+
+// ===== START SERVER =====
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
