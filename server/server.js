@@ -57,32 +57,37 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 // ================== SIGNUP ==================
 app.post("/signup", async (req, res) => {
-  let { email, password } = req.body;
+  try {
+    let { email, password } = req.body;
 
-  email = email?.trim();
-  password = password?.trim();
+    email = email?.trim();
+    password = password?.trim();
 
-  if (!email || !password)
-    return res.status(400).json({ message: "Email & password required" });
+    const existingUser = await User.findOne({ email });
 
+    if (existingUser) {
+      return res.status(400).json({
+        message: "User already exists",
+      });
+    }
 
- const existingUser = await User.findOne({
-  email,
-});
+    const hashed = await bcrypt.hash(password, 10);
 
-if (existingUser)
-  return res.status(400).json({
-    message: "User already exists",
-  });
-    return res.status(400).json({ message: "User already exists" });
+    await User.create({
+      email,
+      password: hashed,
+    });
 
-  const hashed = await bcrypt.hash(password, 10);
-  await User.create({
-  email,
-  password: hashed,
-});
+    res.json({
+      message: "Signup successful",
+    });
+  } catch (err) {
+    console.error("SIGNUP ERROR:", err);
 
-  res.json({ message: "Signup successful" });
+    res.status(500).json({
+      message: "Signup failed",
+    });
+  }
 });
 // ================== LOGIN ==================
 app.post("/login", async (req, res) => {
