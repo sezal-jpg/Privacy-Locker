@@ -69,14 +69,22 @@ app.post("/signup", async (req, res) => {
 // ================== LOGIN ==================
 app.post("/login", async (req, res) => {
   console.log("LOGIN ROUTE VERSION 777");
+
   let { email, password } = req.body;
+
+  console.log("EMAIL RECEIVED:", email);
+  console.log("PASSWORD RECEIVED:", password);
+  console.log("USERS ARRAY:", users);
 
   email = email?.trim();
   password = password?.trim();
 
   const user = users.find((u) => u.email === email);
 
+  console.log("FOUND USER:", user);
+
   if (!user) {
+    console.log("USER NOT FOUND");
     return res.status(400).json({
       message: "User not found",
     });
@@ -87,7 +95,10 @@ app.post("/login", async (req, res) => {
     user.password
   );
 
+  console.log("PASSWORD MATCH:", match);
+
   if (!match) {
+    console.log("INVALID PASSWORD");
     return res.status(400).json({
       message: "Invalid password",
     });
@@ -98,6 +109,7 @@ app.post("/login", async (req, res) => {
     JWT_SECRET
   );
 
+  console.log("TOKEN GENERATED");
 
   res.json({ token });
 });
