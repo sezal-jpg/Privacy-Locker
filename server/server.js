@@ -85,17 +85,33 @@ app.post("/signup", async (req, res) => {
     }
 
     const hashed = await bcrypt.hash(password, 10);
-console.log("Creating user...");
-    const newUser = await User.create({
+
+const otp = Math.floor(
+  100000 + Math.random() * 900000
+).toString();
+
+const otpExpires = new Date(
+  Date.now() + 10 * 60 * 1000
+);
+
+const newUser = await User.create({
   email,
   password: hashed,
+  isVerified: false,
+  otp,
+  otpExpires,
 });
 
 console.log("User created:", newUser);
+await sendOtp(email, otp);
 
+console.log(
+  "OTP sent successfully"
+);
     res.json({
-      message: "Signup successful",
-    });
+  message:
+    "Signup successful. Please verify your email.",
+});
   } catch (err) {
     console.error("SIGNUP ERROR:", err);
 
