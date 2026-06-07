@@ -1,9 +1,13 @@
+require("dotenv").config();
+
+console.log("SERVER FILE LOADED - VERSION 999");
+console.log(
+  "RESEND KEY =",
+  process.env.RESEND_API_KEY
+);
 const sendOtp = require(
   "./utils/sendOtp"
 );
-console.log("SERVER FILE LOADED - VERSION 999");
-require("dotenv").config();
-
 const User = require("./models/User");
 const File = require("./models/File");
 const mongoose = require("mongoose");
