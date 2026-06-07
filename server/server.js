@@ -1,3 +1,6 @@
+const sendOtp = require(
+  "./utils/sendOtp"
+);
 console.log("SERVER FILE LOADED - VERSION 999");
 require("dotenv").config();
 
