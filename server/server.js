@@ -105,19 +105,17 @@ app.post("/login", async (req, res) => {
 
   console.log("EMAIL RECEIVED:", email);
   console.log("PASSWORD RECEIVED:", password);
-  console.log("USERS ARRAY:", users);
 
   email = email?.trim();
   password = password?.trim();
 
-const user = await User.findOne({
-  email,
-});
+  const user = await User.findOne({
+    email,
+  });
 
   console.log("FOUND USER:", user);
 
   if (!user) {
-    console.log("USER NOT FOUND");
     return res.status(400).json({
       message: "User not found",
     });
@@ -131,7 +129,6 @@ const user = await User.findOne({
   console.log("PASSWORD MATCH:", match);
 
   if (!match) {
-    console.log("INVALID PASSWORD");
     return res.status(400).json({
       message: "Invalid password",
     });
