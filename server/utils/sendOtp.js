@@ -1,47 +1,42 @@
-const SibApiV3Sdk = require("@getbrevo/brevo");
+const brevo = require("@getbrevo/brevo");
 
 const sendOtp = async (email, otp) => {
   try {
     const apiInstance =
-      new SibApiV3Sdk.TransactionalEmailsApi();
+      new brevo.TransactionalEmailsApi();
 
     apiInstance.setApiKey(
-      SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey,
+      brevo.TransactionalEmailsApiApiKeys.apiKey,
       process.env.BREVO_API_KEY
     );
 
-    const sendSmtpEmail =
-      new SibApiV3Sdk.SendSmtpEmail();
+    const response =
+      await apiInstance.sendTransacEmail({
+        sender: {
+          name: "Privacy Locker",
+          email: "sezaldhiman701@gmail.com",
+        },
 
-    sendSmtpEmail.subject =
-      "Privacy Locker Verification Code";
+        to: [
+          {
+            email,
+          },
+        ],
 
-    sendSmtpEmail.htmlContent = `
-      <h2>Email Verification</h2>
-      <p>Your OTP is:</p>
-      <h1>${otp}</h1>
-      <p>This code expires in 10 minutes.</p>
-    `;
+        subject:
+          "Privacy Locker Verification Code",
 
-    sendSmtpEmail.sender = {
-      name: "Privacy Locker",
-      email: 'sezaldhiman701@gmail.com',
-    };
-
-    sendSmtpEmail.to = [
-      {
-        email,
-      },
-    ];
-
-    const result =
-      await apiInstance.sendTransacEmail(
-        sendSmtpEmail
-      );
+        htmlContent: `
+          <h2>Email Verification</h2>
+          <p>Your OTP is:</p>
+          <h1>${otp}</h1>
+          <p>This code expires in 10 minutes.</p>
+        `,
+      });
 
     console.log(
       "BREVO RESPONSE:",
-      result
+      response
     );
 
   } catch (err) {
@@ -49,6 +44,8 @@ const sendOtp = async (email, otp) => {
       "BREVO ERROR:",
       err
     );
+
+    throw err;
   }
 };
 
