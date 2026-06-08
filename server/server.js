@@ -103,8 +103,11 @@ const newUser = await User.create({
 });
 
 console.log("User created:", newUser);
+
 console.log("Before sendOtp");
+
 await sendOtp(email, otp);
+
 console.log("After sendOtp");
 
 console.log(
