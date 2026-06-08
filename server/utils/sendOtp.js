@@ -1,7 +1,19 @@
 const brevo = require("@getbrevo/brevo");
 
+console.log("========== BREVO DEBUG ==========");
+console.log(Object.keys(brevo));
+console.log("=================================");
+
 const sendOtp = async (email, otp) => {
   try {
+    console.log("SEND OTP FUNCTION CALLED");
+    console.log("TO EMAIL:", email);
+    console.log(
+      "BREVO KEY EXISTS:",
+      !!process.env.BREVO_API_KEY
+    );
+
+    // Try to create API instance
     const apiInstance =
       new brevo.TransactionalEmailsApi();
 
@@ -38,6 +50,8 @@ const sendOtp = async (email, otp) => {
       "BREVO RESPONSE:",
       response
     );
+
+    return response;
 
   } catch (err) {
     console.error(
