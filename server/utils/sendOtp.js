@@ -1,26 +1,55 @@
-const { Resend } = require("resend");
+const SibApiV3Sdk = require("@getbrevo/brevo");
 
 const sendOtp = async (email, otp) => {
-  console.log("SEND OTP CALLED");
-  console.log("EMAIL:", email);
-  console.log("OTP:", otp);
+  try {
+    const apiInstance =
+      new SibApiV3Sdk.TransactionalEmailsApi();
 
-  const resend = new Resend(
-    process.env.RESEND_API_KEY
-  );
+    apiInstance.setApiKey(
+      SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey,
+      process.env.BREVO_API_KEY
+    );
 
-  const result = await resend.emails.send({
-    from: "onboarding@resend.dev",
-    to: email,
-    subject: "Privacy Locker Verification Code",
-    html: `
+    const sendSmtpEmail =
+      new SibApiV3Sdk.SendSmtpEmail();
+
+    sendSmtpEmail.subject =
+      "Privacy Locker Verification Code";
+
+    sendSmtpEmail.htmlContent = `
       <h2>Email Verification</h2>
+      <p>Your OTP is:</p>
       <h1>${otp}</h1>
-      <p>Valid for 10 minutes.</p>
-    `,
-  });
+      <p>This code expires in 10 minutes.</p>
+    `;
 
-  console.log("RESEND RESPONSE:", result);
+    sendSmtpEmail.sender = {
+      name: "Privacy Locker",
+      email: 'sezaldhiman701@gmail.com',
+    };
+
+    sendSmtpEmail.to = [
+      {
+        email,
+      },
+    ];
+
+    const result =
+      await apiInstance.sendTransacEmail(
+        sendSmtpEmail
+      );
+
+    console.log(
+      "BREVO RESPONSE:",
+      result
+    );
+
+  } catch (err) {
+    console.error(
+      "BREVO ERROR:",
+      err
+    );
+  }
 };
 
 module.exports = sendOtp;
