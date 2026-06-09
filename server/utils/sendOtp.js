@@ -1,29 +1,10 @@
-const brevo = require("@getbrevo/brevo");
-
-console.log("========== BREVO DEBUG ==========");
-console.log(Object.keys(brevo));
-console.log("=================================");
+const axios = require("axios");
 
 const sendOtp = async (email, otp) => {
   try {
-    console.log("SEND OTP FUNCTION CALLED");
-    console.log("TO EMAIL:", email);
-    console.log(
-      "BREVO KEY EXISTS:",
-      !!process.env.BREVO_API_KEY
-    );
-
-    // Try to create API instance
-    const apiInstance =
-      new brevo.TransactionalEmailsApi();
-
-    apiInstance.setApiKey(
-      brevo.TransactionalEmailsApiApiKeys.apiKey,
-      process.env.BREVO_API_KEY
-    );
-
-    const response =
-      await apiInstance.sendTransacEmail({
+    const response = await axios.post(
+      "https://api.brevo.com/v3/smtp/email",
+      {
         sender: {
           name: "Privacy Locker",
           email: "sezaldhiman701@gmail.com",
@@ -44,19 +25,29 @@ const sendOtp = async (email, otp) => {
           <h1>${otp}</h1>
           <p>This code expires in 10 minutes.</p>
         `,
-      });
+      },
+      {
+        headers: {
+          accept: "application/json",
+          "api-key":
+            process.env.BREVO_API_KEY,
+          "content-type":
+            "application/json",
+        },
+      }
+    );
 
     console.log(
       "BREVO RESPONSE:",
-      response
+      response.data
     );
 
-    return response;
+    return response.data;
 
   } catch (err) {
     console.error(
       "BREVO ERROR:",
-      err
+      err.response?.data || err.message
     );
 
     throw err;
