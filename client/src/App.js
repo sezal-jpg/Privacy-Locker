@@ -278,11 +278,7 @@ const handleGoogleLogin = async (response) => {
   }
 };
 
-const logout = () => {
-  localStorage.removeItem("token");
-  setToken(null);
-  setFiles([]);
-};
+
 
   // ===== FILES =====
   const getFiles = async () => {
