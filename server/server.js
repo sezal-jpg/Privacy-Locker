@@ -400,48 +400,51 @@ app.post("/resend-otp", async (req, res) => {
     });
   }
 });
-app.post("/forgot-password", async (req, res) => {
+app.post("/reset-password", async (req, res) => {
   try {
-    const { email } = req.body;
+    const { token, password } = req.body;
 
     const user = await User.findOne({
-      email,
+      resetToken: token,
     });
 
     if (!user) {
-      return res.status(404).json({
-        message: "User not found",
+      return res.status(400).json({
+        message: "Invalid reset token",
       });
     }
 
-    const resetToken = Math.random()
-      .toString(36)
-      .substring(2);
+    if (
+      !user.resetTokenExpires ||
+      user.resetTokenExpires < new Date()
+    ) {
+      return res.status(400).json({
+        message: "Reset link expired",
+      });
+    }
 
-    user.resetToken = resetToken;
+    const hashed = await bcrypt.hash(
+      password,
+      10
+    );
 
-    user.resetTokenExpires =
-      new Date(
-        Date.now() + 15 * 60 * 1000
-      );
-await user.save();
+    user.password = hashed;
+    user.resetToken = null;
+    user.resetTokenExpires = null;
 
-await sendResetEmail(
-  email,
-  resetToken
-);
+    await user.save();
 
-res.json({
-  message:
-    "Password reset email sent",
-});
+    res.json({
+      message:
+        "Password reset successful",
+    });
 
   } catch (err) {
     console.error(err);
 
     res.status(500).json({
       message:
-        "Failed to send reset email",
+        "Password reset failed",
     });
   }
 });

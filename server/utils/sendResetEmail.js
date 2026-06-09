@@ -28,7 +28,7 @@ const sendResetEmail = async (
           Reset Password
         </a>
 
-        <p>Link expires in 15 minutes.</p>
+        <p>Link expires in 10 minutes.</p>
       `,
     },
     {
