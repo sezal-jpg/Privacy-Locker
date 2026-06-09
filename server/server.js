@@ -8,6 +8,9 @@ console.log(
 const sendOtp = require(
   "./utils/sendOtp"
 );
+const sendResetEmail = require(
+  "./utils/sendResetEmail"
+);
 const User = require("./models/User");
 const File = require("./models/File");
 const mongoose = require("mongoose");
@@ -79,9 +82,9 @@ console.log("STEP 1");
     const existingUser = await User.findOne({ email });
 console.log("EXISTING USER:", existingUser);
     if (existingUser) {
-      console.log("User Already Exists. Please sign up directly through Google.");
+      console.log("User Already Exists.");
       return res.status(400).json({
-        message: "User already exists",
+        message: "User already exists.Please sign up directly through Google.",
       });
     }
 
@@ -421,15 +424,17 @@ app.post("/forgot-password", async (req, res) => {
       new Date(
         Date.now() + 15 * 60 * 1000
       );
+await user.save();
 
-    await user.save();
+await sendResetEmail(
+  email,
+  resetToken
+);
 
-    // email sending next step
-
-    res.json({
-      message:
-        "Password reset email sent",
-    });
+res.json({
+  message:
+    "Password reset email sent",
+});
 
   } catch (err) {
     console.error(err);
