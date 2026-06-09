@@ -2,6 +2,8 @@ const axios = require("axios");
 
 const sendOtp = async (email, otp) => {
   try {
+     const verifyLink =
+  `https://privacy-locker-backend.onrender.com/verify-email?email=${email}&otp=${otp}`;
     const response = await axios.post(
       "https://api.brevo.com/v3/smtp/email",
       {
@@ -19,12 +21,31 @@ const sendOtp = async (email, otp) => {
         subject:
           "Privacy Locker Verification Code",
 
-        htmlContent: `
-          <h2>Email Verification</h2>
-          <p>Your OTP is:</p>
-          <h1>${otp}</h1>
-          <p>This code expires in 10 minutes.</p>
-        `,
+       htmlContent: `
+<h2>Welcome to Privacy Locker</h2>
+
+<p>Click the button below to verify your email:</p>
+
+<a
+  href="${verifyLink}"
+  style="
+    background:#2563eb;
+    color:white;
+    padding:12px 24px;
+    border-radius:6px;
+    text-decoration:none;
+    display:inline-block;
+  "
+>
+  Verify Email
+</a>
+
+<p>Or use this OTP:</p>
+
+<h1>${otp}</h1>
+
+<p>This OTP expires in 10 minutes.</p>
+`,
       },
       {
         headers: {

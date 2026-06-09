@@ -306,8 +306,52 @@ app.get("/test-users", async (req, res) => {
   const users = await User.find();
   res.json(users);
 });
+app.get("/verify-email", async (req, res) => {
+  try {
+    const { email, otp } = req.query;
 
+    const user = await User.findOne({
+      email,
+    });
+
+    if (!user) {
+      return res
+        .status(400)
+        .send("User not found");
+    }
+
+    if (user.otp !== otp) {
+      return res
+        .status(400)
+        .send("Invalid OTP");
+    }
+
+    if (new Date() > user.otpExpires) {
+      return res
+        .status(400)
+        .send("OTP expired");
+    }
+
+    user.isVerified = true;
+    user.otp = null;
+    user.otpExpires = null;
+
+    await user.save();
+
+    res.send(
+      "✅ Email verified successfully. You can now login."
+    );
+
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).send(
+      "Verification failed"
+    );
+  }
+});
 // ===== START SERVER =====
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
