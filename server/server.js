@@ -397,6 +397,49 @@ app.post("/resend-otp", async (req, res) => {
     });
   }
 });
+app.post("/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({
+      email,
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    const resetToken = Math.random()
+      .toString(36)
+      .substring(2);
+
+    user.resetToken = resetToken;
+
+    user.resetTokenExpires =
+      new Date(
+        Date.now() + 15 * 60 * 1000
+      );
+
+    await user.save();
+
+    // email sending next step
+
+    res.json({
+      message:
+        "Password reset email sent",
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      message:
+        "Failed to send reset email",
+    });
+  }
+});
 // ===== START SERVER =====
 
 app.listen(PORT, () => {

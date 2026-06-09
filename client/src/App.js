@@ -134,43 +134,45 @@ export default function App() {
   const [loading, setLoading] = useState("");
   const [showVerifyScreen, setShowVerifyScreen] = useState(false);
   // ===== AUTH =====
-  const signup = async () => {
-    setLoading("Creating vault...");
+ const signup = async () => {
+  setLoading("Creating vault...");
 
-    try {
-      const res = await fetch(`${API}/signup`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
-      });
+  try {
+    const res = await fetch(`${API}/signup`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        password,
+      }),
+    });
 
-      const data = await res.json();
+    const data = await res.json();
 
-     if (!res.ok) {
-  alert(data.message);
-  return;
-}
-
-setShowVerifyScreen(true);
-    } catch {
-      alert("Signup failed");
-    } finally {
-      setLoading("");
+    if (!res.ok) {
+      alert(data.message);
+      return;
     }
-  };
-  const resendOtp = async () => {
+
+    setShowVerifyScreen(true);
+
+  } catch {
+    alert("Signup failed");
+  } finally {
+    setLoading("");
+  }
+};
+const forgotPassword = async () => {
   try {
     const res = await fetch(
-      `${API}/resend-otp`,
+      `${API}/forgot-password`,
       {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type":
+            "application/json",
         },
         body: JSON.stringify({
           email,
@@ -184,7 +186,7 @@ setShowVerifyScreen(true);
 
   } catch {
     alert(
-      "Failed to resend verification email"
+      "Failed to send reset email"
     );
   }
 };
@@ -538,7 +540,7 @@ if (showVerifyScreen) {
                   "1px solid rgba(255,255,255,0.08)",
               }}
             >
-              {["login", "signup"].map((tab) => (
+              {["login", "signup","forgot",].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -563,7 +565,9 @@ if (showVerifyScreen) {
                 >
                   {tab === "login"
                     ? "Sign In"
-                    : "Register"}
+                    :tab === 'signup'
+                    ? "Register"
+                    :"forgot"}
                 </button>
               ))}
             </div>
@@ -595,58 +599,61 @@ if (showVerifyScreen) {
                 }}
               />
 
-              <div
-                style={{
-                  position: "relative",
-                }}
-              >
-                <input
-                  type={
-                    showPassword
-                      ? "text"
-                      : "password"
-                  }
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) =>
-                    setPassword(e.target.value)
-                  }
-                  className="input-field"
-                  style={{
-                    width: "100%",
-                    padding:
-                      "14px 42px 14px 14px",
-                    borderRadius: 10,
-                    border:
-                      "1px solid rgba(255,255,255,0.1)",
-                    background:
-                      "rgba(255,255,255,0.04)",
-                    color: "#fff",
-                  }}
-                />
+              {activeTab !== "forgot" && (
+  <div
+    style={{
+      position: "relative",
+    }}
+  >
+    <input
+      type={
+        showPassword
+          ? "text"
+          : "password"
+      }
+      placeholder="Password"
+      value={password}
+      onChange={(e) =>
+        setPassword(e.target.value)
+      }
+      className="input-field"
+      style={{
+        width: "100%",
+        padding:
+          "14px 42px 14px 14px",
+        borderRadius: 10,
+        border:
+          "1px solid rgba(255,255,255,0.1)",
+        background:
+          "rgba(255,255,255,0.04)",
+        color: "#fff",
+      }}
+    />
 
-                <button
-                  onClick={() =>
-                    setShowPassword(!showPassword)
-                  }
-                  style={{
-                    position: "absolute",
-                    right: 12,
-                    top: "50%",
-                    transform:
-                      "translateY(-50%)",
-                    background: "none",
-                    border: "none",
-                    color: "#fff",
-                    cursor: "pointer",
-                  }}
-                >
-                  {showPassword ? "🙈" : "👁️"}
-                </button>
-              </div>
-            </div>
+    <button
+      onClick={() =>
+        setShowPassword(!showPassword)
+      }
+      style={{
+        position: "absolute",
+        right: 12,
+        top: "50%",
+        transform:
+          "translateY(-50%)",
+        background: "none",
+        border: "none",
+        color: "#fff",
+        cursor: "pointer",
+      }}
+    >
+      {showPassword ? "🙈" : "👁️"}
+    </button>
+  </div>
+)}
 
-   {/* Submit */}
+ </div>              
+
+{/* Submit */}
 <div
   style={{
     marginTop: 24,
@@ -655,31 +662,61 @@ if (showVerifyScreen) {
   {loading ? (
     <Spinner label={loading} />
   ) : (
-    <button
-      className="gold-btn"
-      onClick={
-        activeTab === "login"
-          ? login
-          : signup
-      }
-      style={{
-        width: "100%",
-        padding: "14px 0",
-        borderRadius: 10,
-        border: "none",
-        background:
-          "linear-gradient(135deg, #d8b55b, #a87c2a)",
-        color: "#07080d",
-        fontWeight: 700,
-        letterSpacing: 2,
-        textTransform: "uppercase",
-        cursor: "pointer",
-      }}
-    >
-      {activeTab === "login"
-        ? "Unlock Vault"
-        : "Create Vault"}
-    </button>
+    <>
+      <button
+        className="gold-btn"
+        onClick={
+          activeTab === "login"
+            ? login
+    : activeTab === "signup"
+    ? signup
+    : forgotPassword
+        }
+        style={{
+          width: "100%",
+          padding: "14px 0",
+          borderRadius: 10,
+          border: "none",
+          background:
+            "linear-gradient(135deg, #d8b55b, #a87c2a)",
+          color: "#07080d",
+          fontWeight: 700,
+          letterSpacing: 2,
+          textTransform: "uppercase",
+          cursor: "pointer",
+        }}
+      >
+        {activeTab === "login"
+  ? "Unlock Vault"
+  : activeTab === "signup"
+  ? "Create Vault"
+  : "Send Reset Link"}
+      </button>
+
+      {activeTab === "login" && (
+        <div
+          style={{
+            textAlign: "center",
+            marginTop: 12,
+          }}
+        >
+          <button
+            onClick={() =>
+              setActiveTab("forgot")
+            }
+            style={{
+              background: "transparent",
+              border: "none",
+              color: "#c9a84c",
+              cursor: "pointer",
+              fontSize: 14,
+            }}
+          >
+            Forgot Password?
+          </button>
+        </div>
+      )}
+    </>
   )}
 </div>
 
@@ -707,14 +744,16 @@ if (showVerifyScreen) {
     onError={() => alert("Google Login Failed")}
   />
 </div>
+
 </div>
 
 )}
-
-</div>
-
+</div> 
 );
 }
+
+
+
 
   // ===== DASHBOARD =====
   return (
