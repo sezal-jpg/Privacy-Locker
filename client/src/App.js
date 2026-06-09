@@ -132,7 +132,7 @@ export default function App() {
   const [files, setFiles] = useState([]);
 
   const [loading, setLoading] = useState("");
-
+  const [showVerifyScreen, setShowVerifyScreen] = useState(false);
   // ===== AUTH =====
   const signup = async () => {
     setLoading("Creating vault...");
@@ -151,19 +151,43 @@ export default function App() {
 
       const data = await res.json();
 
-      if (!res.ok) {
-        alert(data.message);
-        return;
-      }
+     if (!res.ok) {
+  alert(data.message);
+  return;
+}
 
-      alert("Vault created successfully!");
-      setActiveTab("login");
+setShowVerifyScreen(true);
     } catch {
       alert("Signup failed");
     } finally {
       setLoading("");
     }
   };
+  const resendOtp = async () => {
+  try {
+    const res = await fetch(
+      `${API}/resend-otp`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+        }),
+      }
+    );
+
+    const data = await res.json();
+
+    alert(data.message);
+
+  } catch {
+    alert(
+      "Failed to resend verification email"
+    );
+  }
+};
 
   const login = async () => {
   setLoading("Unlocking vault...");
@@ -340,7 +364,48 @@ const logout = () => {
       alert("Download failed");
     }
   };
+if (showVerifyScreen) {
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        color: "white",
+        background: "#05060a",
+      }}
+    >
+      <h2>Check Your Email</h2>
 
+      <p>
+        A verification email has been sent to:
+      </p>
+
+      <strong>{email}</strong>
+
+      <br />
+      <br />
+
+      <button onClick={resendOtp}>
+        Resend Verification Email
+      </button>
+
+      <br />
+      <br />
+
+      <button
+        onClick={() => {
+          setShowVerifyScreen(false);
+          setActiveTab("login");
+        }}
+      >
+        Go To Login
+      </button>
+    </div>
+  );
+}
   // ===== LOGIN PAGE =====
   if (!token) {
     return (

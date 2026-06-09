@@ -79,7 +79,7 @@ console.log("STEP 1");
     const existingUser = await User.findOne({ email });
 console.log("EXISTING USER:", existingUser);
     if (existingUser) {
-      console.log("USER ALREADY EXISTS");
+      console.log("User Already Exists. Please sign up directly through Google.");
       return res.status(400).json({
         message: "User already exists",
       });
@@ -348,6 +348,53 @@ app.get("/verify-email", async (req, res) => {
     res.status(500).send(
       "Verification failed"
     );
+  }
+});
+app.post("/resend-otp", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({
+      email,
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({
+        message: "Email already verified",
+      });
+    }
+
+    const otp = Math.floor(
+      100000 + Math.random() * 900000
+    ).toString();
+
+    user.otp = otp;
+
+    user.otpExpires = new Date(
+      Date.now() + 10 * 60 * 1000
+    );
+
+    await user.save();
+
+    await sendOtp(email, otp);
+
+    res.json({
+      message:
+        "Verification email sent again",
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      message: "Failed to resend OTP",
+    });
   }
 });
 // ===== START SERVER =====
