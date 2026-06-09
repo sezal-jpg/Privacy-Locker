@@ -75,7 +75,7 @@ app.post("/signup", async (req, res) => {
 
     email = email?.trim();
     password = password?.trim();
-
+console.log("STEP 1");
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {
@@ -101,13 +101,14 @@ const newUser = await User.create({
   otp,
   otpExpires,
 });
-
+console.log("STEP 2");
 console.log("User created:", newUser);
 
 console.log("Before sendOtp");
 console.log("BEFORE SEND OTP");
+console.log("STEP 3");
 await sendOtp(email, otp);
-
+console.log("STEP 4");
 console.log("After sendOtp");
 console.log("BEFORE SEND OTP");
 console.log(
