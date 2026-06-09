@@ -77,8 +77,9 @@ app.post("/signup", async (req, res) => {
     password = password?.trim();
 console.log("STEP 1");
     const existingUser = await User.findOne({ email });
-
+console.log("EXISTING USER:", existingUser);
     if (existingUser) {
+      console.log("USER ALREADY EXISTS");
       return res.status(400).json({
         message: "User already exists",
       });
