@@ -4,8 +4,8 @@ const sendResetEmail = async (
   email,
   resetToken
 ) => {
-  const resetLink =
-    `https://privacy-locker.onrender.com/reset-password?token=${resetToken}`;
+const resetLink =
+  `https://privacy-locker.onrender.com/?token=${resetToken}`;
 
   await axios.post(
     "https://api.brevo.com/v3/smtp/email",

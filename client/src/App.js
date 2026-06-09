@@ -133,6 +133,9 @@ export default function App() {
 
   const [loading, setLoading] = useState("");
   const [showVerifyScreen, setShowVerifyScreen] = useState(false);
+  const [resetMode, setResetMode] = useState(false);
+  const [resetToken, setResetToken] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   // ===== AUTH =====
   const resendOtp = async () => {
   try {
@@ -391,6 +394,93 @@ const logout = () => {
       alert("Download failed");
     }
   };
+  const logout = () => {
+  localStorage.removeItem("token");
+  setToken(null);
+  setFiles([]);
+};
+
+useEffect(() => {
+  const params = new URLSearchParams(
+    window.location.search
+  );
+
+  const token = params.get("token");
+
+  if (token) {
+    setResetMode(true);
+    setResetToken(token);
+  }
+}, []);
+if (resetMode) {
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        background: "#05060a",
+        color: "white",
+      }}
+    >
+      <h2>Reset Password</h2>
+
+      <input
+        type="password"
+        placeholder="New Password"
+        value={newPassword}
+        onChange={(e) =>
+          setNewPassword(e.target.value)
+        }
+        style={{
+          padding: "12px",
+          width: "300px",
+          marginTop: "20px",
+        }}
+      />
+
+      <button
+        onClick={async () => {
+          const res = await fetch(
+            `${API}/reset-password`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+              body: JSON.stringify({
+                token: resetToken,
+                password: newPassword,
+              }),
+            }
+          );
+
+          const data = await res.json();
+
+          alert(data.message);
+
+          if (res.ok) {
+            setResetMode(false);
+            window.history.replaceState(
+              {},
+              "",
+              "/"
+            );
+          }
+        }}
+        style={{
+          marginTop: "20px",
+          padding: "12px 24px",
+        }}
+      >
+        Save Password
+      </button>
+    </div>
+  );
+}
 if (showVerifyScreen) {
   return (
     <div
@@ -592,7 +682,7 @@ if (showVerifyScreen) {
                     ? "Sign In"
                     :tab === 'signup'
                     ? "Register"
-                    :"forgot"}
+                    :"forgot Password"}
                 </button>
               ))}
             </div>
