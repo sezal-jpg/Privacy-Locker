@@ -156,10 +156,14 @@ export default function App() {
         }),
       }
     );
+const data = await res.json();
 
-    const data = await res.json();
+if (!res.ok) {
+  toast.error(data.message);
+  return;
+}
 
-    toast.success(data.message);
+toast.success(data.message);
 
   } catch {
     toast.error(
@@ -185,10 +189,10 @@ export default function App() {
     const data = await res.json();
 
     if (!res.ok) {
-      toast.success(data.message);
+      toast.error(data.message);
       return;
     }
-
+    toast.success(data.message);
     setShowVerifyScreen(true);
 
   } catch {
@@ -214,10 +218,14 @@ const forgotPassword = async () => {
         }),
       }
     );
+  const data = await res.json();
 
-    const data = await res.json();
+if (!res.ok) {
+  toast.error(data.message);
+  return;
+}
 
-    toast.success(data.message);
+toast.success(data.message);
 
   
   } catch {
