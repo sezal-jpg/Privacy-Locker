@@ -400,6 +400,46 @@ app.post("/resend-otp", async (req, res) => {
     });
   }
 });
+app.post("/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    const resetToken = Math.random()
+      .toString(36)
+      .substring(2);
+
+    user.resetToken = resetToken;
+    user.resetTokenExpires = new Date(
+      Date.now() + 60 * 60 * 1000
+    );
+
+    await user.save();
+
+    await sendResetEmail(
+      email,
+      resetToken
+    );
+
+    res.json({
+      message: "Reset link sent",
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      message: "Failed to send reset link",
+    });
+  }
+});
 app.post("/reset-password", async (req, res) => {
   try {
     const { token, password } = req.body;
