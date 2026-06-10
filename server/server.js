@@ -17,6 +17,8 @@ const mongoose = require("mongoose");
 const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 const CryptoJS = require("crypto-js");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
@@ -26,12 +28,21 @@ const {
 } = require("google-auth-library");
 
 const app = express();
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: {
+    message:
+      "Too many attempts. Try again later.",
+  },
+});
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET;
 const client =
   new OAuth2Client(
     process.env.GOOGLE_CLIENT_ID
   );
+app.use(helmet());
 app.use(cors());
 app.use(express.json());
 console.log("URI =", process.env.MONGODB_URI);
@@ -74,10 +85,10 @@ const upload = multer({ storage: multer.memoryStorage() });
 app.post("/signup", async (req, res) => {
    console.log("SIGNUP ROUTE HIT");
   try {
-    let { email, password } = req.body;
+ let { email, password } = req.body;
 
-    email = email?.trim();
-    password = password?.trim();
+email = email?.trim().toLowerCase();
+password = password?.trim();
 console.log("STEP 1");
     const existingUser = await User.findOne({ email });
 console.log("EXISTING USER:", existingUser);
@@ -192,7 +203,7 @@ app.post("/google-login", async (req, res) => {
     });
 
     const payload = ticket.getPayload();
-    const email = payload.email;
+    const email = payload.email?.trim().toLowerCase();
 
     let user = await User.findOne({
   email,
@@ -311,7 +322,9 @@ app.get("/test-users", async (req, res) => {
 });
 app.get("/verify-email", async (req, res) => {
   try {
-    const { email, otp } = req.query;
+     let { email } = req.body;
+
+     email = email?.trim().toLowerCase();
 
     const user = await User.findOne({
       email,
@@ -355,7 +368,9 @@ app.get("/verify-email", async (req, res) => {
 });
 app.post("/resend-otp", async (req, res) => {
   try {
-    const { email } = req.body;
+     let { email } = req.body;
+
+    email = email?.trim().toLowerCase();
 
     const user = await User.findOne({
       email,
