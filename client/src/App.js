@@ -144,6 +144,7 @@ export default function App() {
   // ===== AUTH =====
   const resendOtp = async () => {
   try {
+    toast.success("Test working");
     const res = await fetch(
       `${API}/resend-otp`,
       {
@@ -430,7 +431,10 @@ useEffect(() => {
 }, []);
 if (resetMode) {
   return (
-    <div
+    <>
+      <Toaster position="top-right" />
+
+      <div
       style={{
         minHeight: "100vh",
         display: "flex",
@@ -495,11 +499,15 @@ if (resetMode) {
         Save Password
       </button>
     </div>
+    </>
   );
 }
 if (showVerifyScreen) {
   return (
-    <div
+    <>
+      <Toaster position="top-right" />
+
+      <div
       style={{
         minHeight: "100vh",
         display: "flex",
@@ -537,11 +545,15 @@ if (showVerifyScreen) {
         Go To Login
       </button>
     </div>
+    </>
   );
 }
   // ===== LOGIN PAGE =====
   if (!token) {
-    return (
+  return (
+    <>
+      <Toaster position="top-right" />
+
       <div
         style={{
           minHeight: "100vh",
@@ -880,6 +892,7 @@ if (showVerifyScreen) {
 
 )}
 </div> 
+</>
 );
 }
 
