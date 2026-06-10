@@ -1,3 +1,4 @@
+import toast, { Toaster } from "react-hot-toast";
 import React, { useState, useEffect } from "react";
 import { GoogleLogin } from "@react-oauth/google";
 const API = process.env.REACT_APP_API_URL;
@@ -136,6 +137,10 @@ export default function App() {
   const [resetMode, setResetMode] = useState(false);
   const [resetToken, setResetToken] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [resetLoading, setResetLoading] =
+  useState(false);
+  const [savingPassword, setSavingPassword] =
+  useState(false);
   // ===== AUTH =====
   const resendOtp = async () => {
   try {
@@ -154,10 +159,10 @@ export default function App() {
 
     const data = await res.json();
 
-    alert(data.message);
+    toast.success(data.message);
 
   } catch {
-    alert(
+    toast.error(
       "Failed to resend verification email"
     );
   }
@@ -180,20 +185,22 @@ export default function App() {
     const data = await res.json();
 
     if (!res.ok) {
-      alert(data.message);
+      toast.success(data.message);
       return;
     }
 
     setShowVerifyScreen(true);
 
   } catch {
-    alert("Signup failed");
+    toast.error("Signup failed");
   } finally {
     setLoading("");
   }
 };
 const forgotPassword = async () => {
   try {
+    setLoading("Sending reset link...");
+
     const res = await fetch(
       `${API}/forgot-password`,
       {
@@ -210,15 +217,17 @@ const forgotPassword = async () => {
 
     const data = await res.json();
 
-    alert(data.message);
+    toast.success(data.message);
 
+  
   } catch {
-    alert(
+    toast.error(
       "Failed to send reset email"
     );
+  } finally {
+    setLoading("");
   }
 };
-
   const login = async () => {
   setLoading("Unlocking vault...");
 
@@ -237,7 +246,7 @@ const forgotPassword = async () => {
     const data = await res.json();
 
     if (!res.ok || !data.token) {
-      alert(data.message || "Login failed");
+      toast.error(data.message || "Login failed");
       return;
     }
 
@@ -245,7 +254,7 @@ const forgotPassword = async () => {
     setToken(data.token);
 
   } catch {
-    alert("Login failed");
+    toast.error("Login failed");
   } finally {
     setLoading("");
   }
@@ -266,7 +275,7 @@ const handleGoogleLogin = async (response) => {
     const data = await res.json();
 
     if (!data.token) {
-      alert("Google login failed");
+      toast.error("Google login failed");
       return;
     }
 
@@ -274,7 +283,7 @@ const handleGoogleLogin = async (response) => {
     setToken(data.token);
 
   } catch {
-    alert("Google login failed");
+    toast.error("Google login failed");
   }
 };
 
@@ -293,7 +302,7 @@ const handleGoogleLogin = async (response) => {
 
       setFiles(Array.isArray(data) ? data : []);
     } catch {
-      alert("Failed to load files");
+      toast.error("Failed to load files");
     }
   };
 
@@ -305,7 +314,7 @@ const handleGoogleLogin = async (response) => {
 
   const uploadFile = async () => {
     if (!file) {
-      alert("Select a file");
+      toast.error("Select a file");
       return;
     }
 
@@ -327,17 +336,16 @@ const handleGoogleLogin = async (response) => {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message);
+        toast.error(data.message);
         return;
       }
 
       setFile(null);
 
       document.getElementById("fileInput").value = "";
-
       getFiles();
     } catch {
-      alert("Upload failed");
+      toast.error("Upload failed");
     } finally {
       setLoading("");
     }
@@ -360,7 +368,7 @@ const handleGoogleLogin = async (response) => {
 
       getFiles();
     } catch {
-      alert("Delete failed");
+      toast.error("Delete failed");
     }
   };
 
@@ -387,7 +395,7 @@ const handleGoogleLogin = async (response) => {
 
       window.URL.revokeObjectURL(blobUrl);
     } catch {
-      alert("Download failed");
+      toast.error("Download failed");
     }
   };
   const logout = () => {
@@ -456,7 +464,7 @@ if (resetMode) {
 
           const data = await res.json();
 
-          alert(data.message);
+          toast.success(data.message);
 
           if (res.ok) {
             setResetMode(false);
@@ -852,7 +860,7 @@ if (showVerifyScreen) {
 >
   <GoogleLogin
     onSuccess={handleGoogleLogin}
-    onError={() => alert("Google Login Failed")}
+    onError={() => toast.error("Google Login Failed")}
   />
 </div>
 
