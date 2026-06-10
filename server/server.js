@@ -27,7 +27,7 @@ const {
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const JWT_SECRET = "jwtsecret";
+const JWT_SECRET = process.env.JWT_SECRET;
 const client =
   new OAuth2Client(
     process.env.GOOGLE_CLIENT_ID
