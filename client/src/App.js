@@ -232,6 +232,7 @@ const forgotPassword = async () => {
   setLoading("Unlocking vault...");
 
   try {
+     console.time("login");
     const res = await fetch(`${API}/login`, {
       method: "POST",
       headers: {
@@ -242,7 +243,7 @@ const forgotPassword = async () => {
         password,
       }),
     });
-
+       console.timeEnd("login");
     const data = await res.json();
 
     if (!res.ok || !data.token) {
@@ -308,7 +309,7 @@ const handleGoogleLogin = async (response) => {
 
   useEffect(() => {
     if (token) {
-      getFiles();
+     getFiles();
     }
   }, [token]);
 
@@ -339,11 +340,14 @@ const handleGoogleLogin = async (response) => {
         toast.error(data.message);
         return;
       }
-
       setFile(null);
 
-      document.getElementById("fileInput").value = "";
-      getFiles();
+document.getElementById("fileInput").value = "";
+
+await getFiles();
+
+toast.success("File uploaded successfully");
+      
     } catch {
       toast.error("Upload failed");
     } finally {
