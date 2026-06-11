@@ -316,14 +316,24 @@ app.get(
         file.url
       );
 
-      const encryptedBase64 =
-        await response.text();
+     const encryptedBase64 =
+  await response.text();
 
-      const encrypted =
-        Buffer.from(
-          encryptedBase64,
-          "base64"
-        ).toString();
+console.log(
+  "CLOUDINARY DATA:",
+  encryptedBase64.substring(0, 100)
+);
+
+const encrypted =
+  Buffer.from(
+    encryptedBase64,
+    "base64"
+  ).toString();
+
+console.log(
+  "DECODED DATA:",
+  encrypted.substring(0, 100)
+);
 
       const user = await User.findOne({
         email: req.user,
