@@ -507,9 +507,10 @@ if (showVerifyScreen) {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
+        overflow: "hidden",
+        position: "relative",
       }}
     >
-      {/* AUTH CARD START */}
       <div
         style={{
           width: 420,
@@ -520,37 +521,99 @@ if (showVerifyScreen) {
           border: "1px solid rgba(255,255,255,0.08)",
           boxShadow: "0 20px 80px rgba(0,0,0,0.65)",
           color: "#fff",
-          textAlign: "center",
         }}
       >
-        <h2>Check Your Email</h2>
+        <div
+          style={{
+            textAlign: "center",
+            marginBottom: 28,
+          }}
+        >
+          <div
+            style={{
+              color: "#c9a84c",
+              marginBottom: 10,
+            }}
+          >
+            <LockIcon size={32} />
+          </div>
 
-        <p>
+          <h1
+            style={{
+              fontFamily: "'Cinzel', serif",
+              fontSize: 24,
+              color: "#f4deb3",
+              letterSpacing: 3,
+            }}
+          >
+            Privacy Locker
+          </h1>
+
+          <p
+            style={{
+              color: "rgba(255,255,255,0.4)",
+              marginTop: 8,
+              fontSize: 12,
+              letterSpacing: 1.5,
+              textTransform: "uppercase",
+            }}
+          >
+            Verify Your Email
+          </p>
+        </div>
+
+        <p style={{ textAlign: "center" }}>
           A verification email has been sent to:
         </p>
 
-        <strong>{email}</strong>
+        <p
+          style={{
+            textAlign: "center",
+            color: "#c9a84c",
+            fontWeight: "bold",
+          }}
+        >
+          {email}
+        </p>
 
-        <br />
-        <br />
-
-        <button onClick={resendOtp}>
+        <button
+          className="gold-btn"
+          onClick={resendOtp}
+          style={{
+            width: "100%",
+            marginTop: 20,
+            padding: "14px 0",
+            borderRadius: 10,
+            border: "none",
+            background:
+              "linear-gradient(135deg, #d8b55b, #a87c2a)",
+            color: "#07080d",
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
           Resend Verification Email
         </button>
-
-        <br />
-        <br />
 
         <button
           onClick={() => {
             setShowVerifyScreen(false);
             setActiveTab("login");
           }}
+          style={{
+            width: "100%",
+            marginTop: 12,
+            padding: "14px 0",
+            borderRadius: 10,
+            border: "1px solid rgba(255,255,255,0.1)",
+            background: "rgba(255,255,255,0.04)",
+            color: "#fff",
+            cursor: "pointer",
+          }}
         >
           Go To Login
         </button>
       </div>
-      {/* AUTH CARD END */}
     </div>
   );
 }
