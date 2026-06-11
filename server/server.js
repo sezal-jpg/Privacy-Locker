@@ -95,7 +95,7 @@ console.log("EXISTING USER:", existingUser);
     if (existingUser) {
       console.log("User Already Exists.");
       return res.status(400).json({
-        message: "User already exists.Please sign up directly through Google.",
+        message: "User already exists.Please sign in directly through Google.",
       });
     }
 
