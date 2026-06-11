@@ -221,8 +221,7 @@ app.post("/google-login", async (req, res) => {
 
      const encryptionKey =
   crypto.randomBytes(32).toString("hex");
-const encryptionKey =
-  crypto.randomBytes(32).toString("hex");
+
 
 user = await User.create({
   email,
