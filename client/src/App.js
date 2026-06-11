@@ -429,116 +429,126 @@ useEffect(() => {
     setResetToken(token);
   }
 }, []);
-if (resetMode) {
+ if (resetMode) {
   return (
-
-      <div
+    <div
       style={{
         minHeight: "100vh",
+        background:
+          "radial-gradient(circle at top, #101827 0%, #05060a 70%)",
         display: "flex",
-        flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
-        background: "#05060a",
-        color: "white",
       }}
     >
-      <h2>Reset Password</h2>
-
-      <input
-        type="password"
-        placeholder="New Password"
-        value={newPassword}
-        onChange={(e) =>
-          setNewPassword(e.target.value)
-        }
+      {/* Auth Card */}
+      <div
         style={{
-          padding: "12px",
-          width: "300px",
-          marginTop: "20px",
-        }}
-      />
-
-      <button
-        onClick={async () => {
-          const res = await fetch(
-            `${API}/reset-password`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type":
-                  "application/json",
-              },
-              body: JSON.stringify({
-                token: resetToken,
-                password: newPassword,
-              }),
-            }
-          );
-
-          const data = await res.json();
-
-          alert(data.message);
-
-          if (res.ok) {
-            setResetMode(false);
-            window.history.replaceState(
-              {},
-              "",
-              "/"
-            );
-          }
-        }}
-        style={{
-          marginTop: "20px",
-          padding: "12px 24px",
+          width: 420,
+          padding: "42px 38px",
+          borderRadius: 24,
+          background: "rgba(15,18,28,0.88)",
+          backdropFilter: "blur(16px)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          boxShadow: "0 20px 80px rgba(0,0,0,0.65)",
+          color: "#fff",
+          textAlign: "center",
         }}
       >
-        Save Password
-      </button>
+        <h2>Reset Password</h2>
+
+        <input
+          type="password"
+          placeholder="New Password"
+          value={newPassword}
+          onChange={(e) =>
+            setNewPassword(e.target.value)
+          }
+          style={{
+            width: "100%",
+            padding: "14px",
+            marginTop: "20px",
+            borderRadius: 10,
+            border:
+              "1px solid rgba(255,255,255,0.1)",
+            background:
+              "rgba(255,255,255,0.04)",
+            color: "#fff",
+          }}
+        />
+
+        <button
+          style={{
+            marginTop: "20px",
+            width: "100%",
+            padding: "14px 0",
+            borderRadius: 10,
+            border: "none",
+            background:
+              "linear-gradient(135deg, #d8b55b, #a87c2a)",
+            color: "#07080d",
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          Save Password
+        </button>
+      </div>
     </div>
   );
 }
 if (showVerifyScreen) {
   return (
-
-      <div
+    <div
       style={{
         minHeight: "100vh",
+        background:
+          "radial-gradient(circle at top, #101827 0%, #05060a 70%)",
         display: "flex",
-        flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
-        color: "white",
-        background: "#05060a",
       }}
     >
-      <h2>Check Your Email</h2>
-
-      <p>
-        A verification email has been sent to:
-      </p>
-
-      <strong>{email}</strong>
-
-      <br />
-      <br />
-
-      <button onClick={resendOtp}>
-        Resend Verification Email
-      </button>
-
-      <br />
-      <br />
-
-      <button
-        onClick={() => {
-          setShowVerifyScreen(false);
-          setActiveTab("login");
+      <div
+        style={{
+          width: 420,
+          padding: "42px 38px",
+          borderRadius: 24,
+          background: "rgba(15,18,28,0.88)",
+          backdropFilter: "blur(16px)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          boxShadow: "0 20px 80px rgba(0,0,0,0.65)",
+          color: "#fff",
+          textAlign: "center",
         }}
       >
-        Go To Login
-      </button>
+        <h2>Check Your Email</h2>
+
+        <p>
+          A verification email has been sent to:
+        </p>
+
+        <strong>{email}</strong>
+
+        <br />
+        <br />
+
+        <button onClick={resendOtp}>
+          Resend Verification Email
+        </button>
+
+        <br />
+        <br />
+
+        <button
+          onClick={() => {
+            setShowVerifyScreen(false);
+            setActiveTab("login");
+          }}
+        >
+          Go To Login
+        </button>
+      </div>
     </div>
   );
 }
