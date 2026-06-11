@@ -509,6 +509,7 @@ if (showVerifyScreen) {
         alignItems: "center",
       }}
     >
+      {/* AUTH CARD START */}
       <div
         style={{
           width: 420,
@@ -549,6 +550,7 @@ if (showVerifyScreen) {
           Go To Login
         </button>
       </div>
+      {/* AUTH CARD END */}
     </div>
   );
 }
