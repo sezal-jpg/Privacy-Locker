@@ -316,22 +316,11 @@ app.get(
         file.url
       );
 
-     const encryptedBase64 =
+     const encrypted =
   await response.text();
 
 console.log(
-  "CLOUDINARY DATA:",
-  encryptedBase64.substring(0, 100)
-);
-
-const encrypted =
-  Buffer.from(
-    encryptedBase64,
-    "base64"
-  ).toString();
-
-console.log(
-  "DECODED DATA:",
+  "ENCRYPTED DATA:",
   encrypted.substring(0, 100)
 );
 
