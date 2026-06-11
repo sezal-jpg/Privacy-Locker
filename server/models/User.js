@@ -35,6 +35,10 @@ resetTokenExpires: {
   type: Date,
   default: null,
 },
+encryptionKey: {
+  type: String,
+  required: true,
+},
 });
 module.exports = mongoose.model(
   "User",

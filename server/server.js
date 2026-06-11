@@ -1,5 +1,5 @@
 require("dotenv").config();
-
+const crypto = require("crypto");
 console.log("SERVER FILE LOADED - VERSION 999");
 console.log(
   "RESEND KEY =",
@@ -109,12 +109,16 @@ const otpExpires = new Date(
   Date.now() + 10 * 60 * 1000
 );
 
+const encryptionKey =
+  crypto.randomBytes(32).toString("hex");
+
 const newUser = await User.create({
   email,
   password: hashed,
   isVerified: false,
   otp,
   otpExpires,
+  encryptionKey,
 });
 console.log("STEP 2");
 console.log("User created:", newUser);
@@ -215,9 +219,15 @@ app.post("/google-login", async (req, res) => {
         10
       );
 
-      user = await User.create({
+     const encryptionKey =
+  crypto.randomBytes(32).toString("hex");
+const encryptionKey =
+  crypto.randomBytes(32).toString("hex");
+
+user = await User.create({
   email,
   password: hashed,
+  encryptionKey,
 });
     }
 
@@ -244,10 +254,10 @@ app.post("/upload", authMiddleware, upload.single("file"), async (req, res) => {
   email: req.user,
 });
 
-    const encrypted = CryptoJS.AES.encrypt(
-      req.file.buffer.toString("base64"),
-      user.password
-    ).toString();
+   const encrypted = CryptoJS.AES.encrypt(
+  req.file.buffer.toString("base64"),
+  user.encryptionKey
+).toString();
 
     const result = await cloudinary.uploader.upload(
       "data:text/plain;base64," + Buffer.from(encrypted).toString("base64"),
@@ -287,7 +297,64 @@ app.get("/files", authMiddleware, async (req, res) => {
     });
   }
 });
+app.get(
+  "/download",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const file = await File.findOne({
+        public_id: req.query.id,
+        user: req.user,
+      });
 
+      if (!file) {
+        return res.status(404).json({
+          message: "File not found",
+        });
+      }
+
+      const response = await fetch(
+        file.url
+      );
+
+      const encryptedBase64 =
+        await response.text();
+
+      const encrypted =
+        Buffer.from(
+          encryptedBase64,
+          "base64"
+        ).toString();
+
+      const user = await User.findOne({
+        email: req.user,
+      });
+
+      const bytes =
+        CryptoJS.AES.decrypt(
+          encrypted,
+          user.encryptionKey
+        );
+
+      const originalBase64 =
+        bytes.toString(
+          CryptoJS.enc.Utf8
+        );
+
+      res.json({
+        filename: file.originalName,
+        data: originalBase64,
+      });
+
+    } catch (err) {
+      console.error(err);
+
+      res.status(500).json({
+        message: "Download failed",
+      });
+    }
+  }
+);
 // ================== DELETE ==================
 app.delete("/delete", authMiddleware, async (req, res) => {
   try {
@@ -322,9 +389,9 @@ app.get("/test-users", async (req, res) => {
 });
 app.get("/verify-email", async (req, res) => {
   try {
-     let { email } = req.body;
+    let { email, otp } = req.query;
 
-     email = email?.trim().toLowerCase();
+    email = email?.trim().toLowerCase();
 
     const user = await User.findOne({
       email,

@@ -385,32 +385,47 @@ alert("File uploaded successfully");
     }
   };
 
-  const downloadFile = async (url, name) => {
-    try {
-      let fileName = name;
-
-      if (!fileName.endsWith(".txt")) {
-        fileName += ".txt";
+  const downloadFile = async (
+  publicId,
+  fileName
+) => {
+  try {
+    const res = await fetch(
+      `${API}/download?id=${publicId}`,
+      {
+        headers: {
+          Authorization: token,
+        },
       }
+    );
 
-      const res = await fetch(url);
+    const data = await res.json();
 
-      const blob = await res.blob();
-
-      const blobUrl = window.URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-
-      a.href = blobUrl;
-      a.download = fileName;
-
-      a.click();
-
-      window.URL.revokeObjectURL(blobUrl);
-    } catch {
-      alert("Download failed");
+    if (!res.ok) {
+      alert(data.message);
+      return;
     }
-  };
+
+    const link =
+      document.createElement("a");
+
+    link.href =
+      "data:application/octet-stream;base64," +
+      data.data;
+
+    link.download =
+      data.filename || fileName;
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    document.body.removeChild(link);
+
+  } catch {
+    alert("Download failed");
+  }
+};
   const logout = () => {
   localStorage.removeItem("token");
   setToken(null);
@@ -1339,25 +1354,15 @@ if (showVerifyScreen) {
                     }}
                   >
                     <button
-                      onClick={() =>
-                        downloadFile(
-                          f.url,
-                          f.originalName
-                        )
-                      }
-                      style={{
-                        flex: 1,
-                        padding: "12px 0",
-                        borderRadius: 14,
-                        border: "none",
-                        background:
-                          "rgba(201,168,76,0.15)",
-                        color: "#f4deb3",
-                        cursor: "pointer",
-                      }}
+                onClick={() =>
+                downloadFile(
+                  f.public_id,
+                 f.originalName
+                   )
+                     }
                     >
-                      Download
-                    </button>
+                  Download
+                  </button>
 
                     <button
                       onClick={() =>
